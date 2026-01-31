@@ -32,28 +32,30 @@ function getSuggestedReplacement(type) {
 }
 
 /**
- * Create stable ID for PHI item based on value content
- * This ID persists across position changes when code is edited
+ * Create stable content-based ID for PHI value
+ * Same PHI value always gets the same contentId (for linking custom replacements)
  */
-function createPHIItemId(value, type) {
-  // Use a simple hash of value + type for stable ID
-  // This way the same PHI keeps the same ID even if line/column changes
+function createContentId(value, type) {
   const str = `${type}:${value}`;
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    hash = hash & hash;
   }
   return `phi-${Math.abs(hash)}`;
 }
 
 /**
  * Extract PHI items from detection data with line/column positions
+ * Uses hybrid ID system:
+ * - id: Unique per occurrence (for row selection/highlighting)
+ * - contentId: Same for all occurrences of same PHI (for custom replacements)
  */
 function extractPHIItems(phiDetection, code) {
   const items = [];
   const lines = code.split('\n');
+  const occurrenceCounts = new Map(); // Track occurrence count per contentId
 
   if (!phiDetection?.suggestions) return items;
 
@@ -64,17 +66,24 @@ function extractPHIItems(phiDetection, code) {
       lines.forEach((line, lineIndex) => {
         let startCol = 0;
         while ((startCol = line.indexOf(example, startCol)) !== -1) {
+          const contentId = createContentId(example, suggestion.title);
+
+          // Get occurrence count for this contentId
+          const occurrenceCount = occurrenceCounts.get(contentId) || 0;
+          occurrenceCounts.set(contentId, occurrenceCount + 1);
+
           items.push({
-            id: createPHIItemId(example, suggestion.title), // Content-based stable ID
+            id: `${contentId}-${occurrenceCount}`, // Unique ID per occurrence
+            contentId: contentId, // Stable ID for same PHI value
             lineNumber: lineIndex + 1,
-            columnStart: startCol + 1, // Monaco uses 1-based columns
+            columnStart: startCol + 1,
             columnEnd: startCol + example.length + 1,
             value: example,
             type: suggestion.title,
             message: suggestion.message,
             confidence: phiDetection.confidence,
             suggestedReplacement: getSuggestedReplacement(suggestion.title),
-            state: 'pending' // 'pending' | 'accepted' | 'skipped'
+            state: 'pending'
           });
           startCol += example.length;
         }
@@ -139,23 +148,23 @@ export function PHIEditorEnhancer({
     const items = extractPHIItems(phiDetection, code);
     setPhiItems(items);
 
-    // Preserve review state for items with matching IDs (same PHI content)
+    // Preserve review state for items with matching contentIds (same PHI value)
     setReviewState(prev => {
       const preserved = {};
       items.forEach(item => {
-        if (prev[item.id]) {
-          preserved[item.id] = prev[item.id];
+        if (prev[item.contentId]) {
+          preserved[item.contentId] = prev[item.contentId];
         }
       });
       return preserved;
     });
 
-    // Preserve custom replacements for items with matching IDs
+    // Preserve custom replacements for items with matching contentIds
     setCustomReplacements(prev => {
       const preserved = {};
       items.forEach(item => {
-        if (prev[item.id]) {
-          preserved[item.id] = prev[item.id];
+        if (prev[item.contentId]) {
+          preserved[item.contentId] = prev[item.contentId];
         }
       });
       return preserved;
@@ -165,8 +174,8 @@ export function PHIEditorEnhancer({
     setOriginalValues(prev => {
       const preserved = {};
       items.forEach(item => {
-        if (prev[item.id]) {
-          preserved[item.id] = prev[item.id];
+        if (prev[item.contentId]) {
+          preserved[item.contentId] = prev[item.contentId];
         }
       });
       return preserved;
@@ -184,10 +193,10 @@ export function PHIEditorEnhancer({
     }
 
     const decorations = phiItems.map(item => {
-      const state = reviewState[item.id];
+      const state = reviewState[item.contentId];
       const isAccepted = state === 'accepted';
       const isSkipped = state === 'skipped';
-      const isCurrent = item.id === currentItemId;
+      const isCurrent = item.id === currentItemId; // Use unique id for current row
 
       return {
         range: new monacoInstance.Range(
@@ -377,38 +386,39 @@ export function PHIEditorEnhancer({
     const item = phiItems.find(i => i.id === itemId);
     if (!item || !editorInstance) return;
 
-    // Store the custom replacement
+    // Store the custom replacement using contentId (shared across all occurrences)
     setCustomReplacements(prev => ({
       ...prev,
-      [itemId]: newReplacement
+      [item.contentId]: newReplacement
     }));
 
     // If this item is already accepted, update the code in Monaco immediately
-    if (reviewState[itemId] === 'accepted') {
-      const oldReplacement = customReplacements[itemId] || item.suggestedReplacement;
+    if (reviewState[item.contentId] === 'accepted') {
+      const oldReplacement = customReplacements[item.contentId] || item.suggestedReplacement;
       const newCode = code.replaceAll(oldReplacement, newReplacement);
       onCodeChange(newCode);
     }
   }, [phiItems, reviewState, customReplacements, code, onCodeChange, editorInstance]);
 
-  // Handle accept PHI - apply immediately
+  // Handle accept PHI - apply immediately to ALL occurrences of this PHI
   const handleAcceptPHI = useCallback((itemId) => {
-    setReviewState(prev => ({ ...prev, [itemId]: 'accepted' }));
+    const item = phiItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Use contentId to mark ALL occurrences as accepted
+    setReviewState(prev => ({ ...prev, [item.contentId]: 'accepted' }));
 
     // Store original value for revert (immutable "Found" column)
-    const item = phiItems.find(i => i.id === itemId);
-    if (item) {
-      setOriginalValues(prev => ({ ...prev, [itemId]: item.value }));
-    }
+    setOriginalValues(prev => ({ ...prev, [item.contentId]: item.value }));
 
-    // Apply replacement immediately
-    if (item && editorInstance) {
-      const replacement = customReplacements[itemId] || item.suggestedReplacement;
+    // Apply replacement immediately to all occurrences
+    if (editorInstance) {
+      const replacement = customReplacements[item.contentId] || item.suggestedReplacement;
       const newCode = code.replaceAll(item.value, replacement);
       onCodeChange(newCode);
     }
 
-    // Move to next item
+    // Move to next item (use unique id for navigation)
     const currentIndex = phiItems.findIndex(i => i.id === itemId);
     if (currentIndex < phiItems.length - 1) {
       setCurrentItemId(phiItems[currentIndex + 1].id);
@@ -417,11 +427,15 @@ export function PHIEditorEnhancer({
     }
   }, [phiItems, customReplacements, code, onCodeChange, editorInstance]);
 
-  // Handle skip PHI
+  // Handle skip PHI - mark ALL occurrences of this PHI as skipped
   const handleSkipPHI = useCallback((itemId) => {
-    setReviewState(prev => ({ ...prev, [itemId]: 'skipped' }));
+    const item = phiItems.find(i => i.id === itemId);
+    if (!item) return;
 
-    // Move to next item
+    // Use contentId to mark ALL occurrences as skipped
+    setReviewState(prev => ({ ...prev, [item.contentId]: 'skipped' }));
+
+    // Move to next item (use unique id for navigation)
     const currentIndex = phiItems.findIndex(i => i.id === itemId);
     if (currentIndex < phiItems.length - 1) {
       setCurrentItemId(phiItems[currentIndex + 1].id);
@@ -430,50 +444,60 @@ export function PHIEditorEnhancer({
     }
   }, [phiItems]);
 
-  // Handle revert PHI - undo a previous application
+  // Handle revert PHI - undo a previous application for ALL occurrences
   const handleRevertPHI = useCallback((itemId) => {
     const item = phiItems.find(i => i.id === itemId);
-    const originalValue = originalValues[itemId];
-    if (!item || !originalValue || !editorInstance) return;
+    if (!item) return;
+
+    const originalValue = originalValues[item.contentId];
+    if (!originalValue || !editorInstance) return;
 
     // Revert: replace the replacement back to stored original value
-    const replacement = customReplacements[itemId] || item.suggestedReplacement;
+    const replacement = customReplacements[item.contentId] || item.suggestedReplacement;
     const newCode = code.replaceAll(replacement, originalValue);
     onCodeChange(newCode);
 
-    // Reset state to pending and clear stored original
+    // Reset state to pending and clear stored original (use contentId)
     setReviewState(prev => {
       const updated = { ...prev };
-      delete updated[itemId];
+      delete updated[item.contentId];
       return updated;
     });
     setOriginalValues(prev => {
       const updated = { ...prev };
-      delete updated[itemId];
+      delete updated[item.contentId];
       return updated;
     });
   }, [phiItems, originalValues, customReplacements, code, onCodeChange, editorInstance]);
 
-  // Revert a skipped item back to pending
+  // Revert a skipped item back to pending (ALL occurrences)
   const handleUnskipPHI = useCallback((itemId) => {
+    const item = phiItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Use contentId to unskip ALL occurrences
     setReviewState(prev => {
       const updated = { ...prev };
-      delete updated[itemId];
+      delete updated[item.contentId];
       return updated;
     });
-  }, []);
+  }, [phiItems]);
 
   // Revert all applied changes and skipped items at once
   const handleRevertAllChanges = useCallback(() => {
     let revertedCode = code;
     const reversions = [];
+    const processedContentIds = new Set();
 
-    // Collect all applied items to revert
+    // Collect all applied items to revert (only once per contentId)
     phiItems.forEach(item => {
-      const state = reviewState[item.id];
-      const originalValue = originalValues[item.id];
+      if (processedContentIds.has(item.contentId)) return;
+      processedContentIds.add(item.contentId);
+
+      const state = reviewState[item.contentId];
+      const originalValue = originalValues[item.contentId];
       if (state === 'accepted' && originalValue) {
-        const replacement = customReplacements[item.id] || item.suggestedReplacement;
+        const replacement = customReplacements[item.contentId] || item.suggestedReplacement;
         reversions.push({ replacement, originalValue });
       }
     });
@@ -488,17 +512,7 @@ export function PHIEditorEnhancer({
     }
 
     // Reset all accepted AND skipped items to pending
-    setReviewState(prev => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach(id => {
-        if (updated[id] === 'accepted' || updated[id] === 'skipped') {
-          delete updated[id];
-        }
-      });
-      return updated;
-    });
-
-    // Clear all stored originals
+    setReviewState({});
     setOriginalValues({});
   }, [phiItems, reviewState, originalValues, customReplacements, code, onCodeChange]);
 
@@ -570,7 +584,7 @@ export function PHIEditorEnhancer({
         // Apply replacement for current item
         if (currentIndex >= 0 && currentIndex < phiItems.length) {
           const currentItem = phiItems[currentIndex];
-          const state = reviewState[currentItem.id];
+          const state = reviewState[currentItem.contentId];
           if (!state) {
             // Only apply if not already applied or skipped
             handleAcceptPHI(currentItem.id);
@@ -601,8 +615,8 @@ export function PHIEditorEnhancer({
 
       switch (sortConfig.key) {
         case 'status':
-          aVal = reviewState[a.id] || 'pending';
-          bVal = reviewState[b.id] || 'pending';
+          aVal = reviewState[a.contentId] || 'pending';
+          bVal = reviewState[b.contentId] || 'pending';
           break;
         case 'type':
           aVal = a.type;
@@ -617,8 +631,8 @@ export function PHIEditorEnhancer({
           bVal = b.value;
           break;
         case 'replacement':
-          aVal = customReplacements[a.id] || a.suggestedReplacement;
-          bVal = customReplacements[b.id] || b.suggestedReplacement;
+          aVal = customReplacements[a.contentId] || a.suggestedReplacement;
+          bVal = customReplacements[b.contentId] || b.suggestedReplacement;
           break;
         default:
           return 0;
@@ -665,21 +679,27 @@ export function PHIEditorEnhancer({
     let sanitizedCode = code;
     const replacements = [];
     const originals = {};
+    const updatedReviewState = { ...reviewState };
+    const processedContentIds = new Set();
 
-    // Apply all pending items (not already applied or skipped)
+    // Apply all pending items (not already applied or skipped, only once per contentId)
     phiItems.forEach(item => {
-      const state = reviewState[item.id];
+      if (processedContentIds.has(item.contentId)) return;
+      processedContentIds.add(item.contentId);
+
+      const state = reviewState[item.contentId];
       if (!state || state === 'pending') {
-        const replacement = customReplacements[item.id] || item.suggestedReplacement;
+        const replacement = customReplacements[item.contentId] || item.suggestedReplacement;
         replacements.push({ value: item.value, replacement });
         // Store original value for revert
-        originals[item.id] = item.value;
+        originals[item.contentId] = item.value;
         // Mark as accepted
-        setReviewState(prev => ({ ...prev, [item.id]: 'accepted' }));
+        updatedReviewState[item.contentId] = 'accepted';
       }
     });
 
-    // Store all original values
+    // Update states
+    setReviewState(updatedReviewState);
     if (Object.keys(originals).length > 0) {
       setOriginalValues(prev => ({ ...prev, ...originals }));
     }
@@ -702,12 +722,16 @@ export function PHIEditorEnhancer({
   // Skip all pending items (mark as skipped without applying replacements)
   const handleSkipAllPending = useCallback(() => {
     const updatedReviewState = { ...reviewState };
+    const processedContentIds = new Set();
 
-    // Mark all pending items as skipped
+    // Mark all pending items as skipped (only once per contentId)
     phiItems.forEach(item => {
-      const state = reviewState[item.id];
+      if (processedContentIds.has(item.contentId)) return;
+      processedContentIds.add(item.contentId);
+
+      const state = reviewState[item.contentId];
       if (!state || state === 'pending') {
-        updatedReviewState[item.id] = 'skipped';
+        updatedReviewState[item.contentId] = 'skipped';
       }
     });
 
@@ -773,12 +797,16 @@ export function PHIEditorEnhancer({
   }, [panelExpanded, phiItems, currentItemId]);
 
   // Calculate progress
+  // Calculate counts based on unique PHI values (contentIds)
+  const uniqueContentIds = new Set(phiItems.map(item => item.contentId));
+  const totalUniquePhiCount = uniqueContentIds.size;
+
   const reviewedCount = Object.keys(reviewState).length;
   const acceptedCount = Object.values(reviewState).filter(s => s === 'accepted').length;
   const skippedCount = Object.values(reviewState).filter(s => s === 'skipped').length;
   const revertableCount = acceptedCount + skippedCount; // Both can be reverted
-  const pendingCount = phiItems.length - reviewedCount;
-  const progress = phiItems.length > 0 ? (reviewedCount / phiItems.length) * 100 : 0;
+  const pendingCount = totalUniquePhiCount - reviewedCount;
+  const progress = totalUniquePhiCount > 0 ? (reviewedCount / totalUniquePhiCount) * 100 : 0;
 
   const sortedItems = getSortedItems();
 
@@ -806,8 +834,8 @@ export function PHIEditorEnhancer({
           <div className="phi-panel-title">
             <AlertTriangle className="w-5 h-5" aria-hidden="true" />
             <span>
-              <span className="lg:hidden">PHI Detected ({phiItems.length} items)</span>
-              <span className="hidden lg:inline">Protected Health Information Detected ({phiItems.length} items)</span>
+              <span className="lg:hidden">PHI Detected ({totalUniquePhiCount} unique, {phiItems.length} total)</span>
+              <span className="hidden lg:inline">Protected Health Information Detected ({totalUniquePhiCount} unique values, {phiItems.length} occurrences)</span>
             </span>
             {phiDetection?.confidence && (
               <span
@@ -871,7 +899,7 @@ export function PHIEditorEnhancer({
             <div className="phi-stats">
               <span className="phi-stat-accepted">✓ {acceptedCount} Accepted</span>
               <span className="phi-stat-skipped">⊘ {skippedCount} Skipped</span>
-              <span className="phi-stat-pending">⋯ {phiItems.length - reviewedCount} Pending</span>
+              <span className="phi-stat-pending">⋯ {pendingCount} Pending</span>
             </div>
 
             {/* PHI Items Table */}
@@ -994,8 +1022,8 @@ export function PHIEditorEnhancer({
                 </thead>
                 <tbody>
                   {sortedItems.map((item, index) => {
-                    const state = reviewState[item.id];
-                    const isCurrent = item.id === currentItemId;
+                    const state = reviewState[item.contentId]; // Use contentId for shared state
+                    const isCurrent = item.id === currentItemId; // Use unique id for current row
 
                     return (
                       <tr
@@ -1056,7 +1084,7 @@ export function PHIEditorEnhancer({
                             }}
                             onBlur={(e) => {
                               const newValue = e.target.textContent.trim();
-                              if (newValue && newValue !== (customReplacements[item.id] || item.suggestedReplacement)) {
+                              if (newValue && newValue !== (customReplacements[item.contentId] || item.suggestedReplacement)) {
                                 handleReplacementEdit(item.id, newValue);
                               }
                               setEditingItemId(null);
@@ -1069,7 +1097,7 @@ export function PHIEditorEnhancer({
                               if (e.key === 'Escape') {
                                 e.preventDefault();
                                 // Revert to original value
-                                e.target.textContent = customReplacements[item.id] || item.suggestedReplacement;
+                                e.target.textContent = customReplacements[item.contentId] || item.suggestedReplacement;
                                 e.target.blur();
                               }
                               // Stop propagation to prevent table navigation
@@ -1082,7 +1110,7 @@ export function PHIEditorEnhancer({
                               outlineOffset: '2px'
                             }}
                           >
-                            {customReplacements[item.id] || item.suggestedReplacement}
+                            {customReplacements[item.contentId] || item.suggestedReplacement}
                           </code>
                         </td>
                         <td className="phi-col-action" role="gridcell">
@@ -1153,7 +1181,7 @@ export function PHIEditorEnhancer({
             {/* Footer Actions */}
             <div className="phi-panel-footer">
               <div className="phi-footer-left">
-                Progress: {reviewedCount}/{phiItems.length} Reviewed
+                Progress: {reviewedCount}/{totalUniquePhiCount} Unique PHI Reviewed
               </div>
               <div className="phi-footer-right">
                 {showBackToFirst && (
