@@ -122,6 +122,7 @@ export function PHIEditorEnhancer({
   const getInitialColumnWidths = () => {
     const stored = localStorage.getItem(STORAGE_KEYS.PHI_TABLE_COLUMNS);
     const defaults = {
+      number: 20,
       status: 105,
       line: 40,
       id: 125,
@@ -680,9 +681,9 @@ export function PHIEditorEnhancer({
   }, [phiItems, sortConfig, reviewState, customReplacements]);
 
   // Column-specific minimum widths (all resizable columns except #)
-  // Set to 10px to allow maximum user control - essentially no minimum
+  // Set to 1px to allow maximum user control - essentially no minimum
   const getMinColumnWidth = useCallback((column) => {
-    return 10; // Allow columns to shrink to nearly nothing
+    return 1; // Allow columns to shrink to essentially nothing
   }, []);
 
   // Handle column resize
@@ -959,11 +960,20 @@ export function PHIEditorEnhancer({
                 <thead>
                   <tr role="row">
                     <th
-                      className="phi-col-number"
+                      className="phi-col-number phi-col-resizable"
+                      style={{ width: `${columnWidths.number}px` }}
                       role="columnheader"
                       title="Entry number in table"
                     >
-                      #
+                      <div className="phi-col-header">
+                        <span>#</span>
+                        <div
+                          className="phi-col-resize-handle"
+                          onMouseDown={(e) => startResize(e, 'number')}
+                        >
+                          <GripVertical className="w-3 h-3" />
+                        </div>
+                      </div>
                     </th>
                     <th
                       className="phi-col-status phi-col-resizable"

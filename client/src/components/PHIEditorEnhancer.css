@@ -385,9 +385,8 @@
 }
 
 /* Column Widths */
-/* # column is the only non-resizable column */
+/* All columns are now resizable */
 .phi-col-number {
-  width: 20px;
   text-align: center;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
