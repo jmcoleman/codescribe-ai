@@ -2509,7 +2509,7 @@ function App() {
 
       {/* Alert Banners Section */}
       {(user && !user.email_verified) || (showPhiWarning && phiDetection) ? (
-        <div className="px-4 pt-4 mb-4">
+        <div className="px-4 pt-4 mb-4 space-y-3">
           {/* Email Verification Banner - Shows at top for unverified users */}
           {user && !user.email_verified && (
             <UnverifiedEmailBanner user={user} />

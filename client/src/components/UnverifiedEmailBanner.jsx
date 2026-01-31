@@ -99,31 +99,31 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
       borderColor="border-indigo-500 dark:border-indigo-400"
       onDismiss={handleDismiss}
       ariaLive="polite"
-      alignCenter={true}
-      actions={
-        <button
-          onClick={handleResend}
-          disabled={isResending}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 rounded-md shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-        >
+    >
+      <div className="text-sm text-slate-700 dark:text-slate-300">
+        <p>
+          <span className="font-semibold text-slate-900 dark:text-white">Verify your email</span>
+          <span className="hidden sm:inline">
+            {' — '}
+            Check your inbox and click the verification link.
+          </span>
+        </p>
+        <p className="mt-1">
           {isResending ? (
-            <>
+            <span className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>Sending...</span>
-            </>
+            </span>
           ) : (
-            'Resend Email'
+            <button
+              onClick={handleResend}
+              className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 underline decoration-1 underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1 rounded-sm transition-all"
+            >
+              Resend verification email
+            </button>
           )}
-        </button>
-      }
-    >
-      <p className="text-sm text-slate-700 dark:text-slate-300">
-        <span className="font-semibold text-slate-900 dark:text-white">Verify your email</span>
-        <span className="hidden sm:inline">
-          {' — '}
-          Check your inbox and click the verification link
-        </span>
-      </p>
+        </p>
+      </div>
     </Banner>
   );
 }
