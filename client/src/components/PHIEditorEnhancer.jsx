@@ -651,24 +651,41 @@ export function PHIEditorEnhancer({
     });
   }, [phiItems, sortConfig, reviewState, customReplacements]);
 
+  // Column-specific minimum widths
+  const getMinColumnWidth = useCallback((column) => {
+    const minimums = {
+      number: 30,      // Row number can be very narrow
+      status: 80,      // Status needs room for icon + text
+      line: 40,        // Line numbers can be narrow
+      id: 80,          // ID needs room for "phi-12345-0"
+      type: 60,        // Type names vary
+      found: 100,      // Need room for PHI values
+      replacement: 100, // Need room for replacement values
+      action: 100       // Need room for buttons
+    };
+    return minimums[column] || 60;
+  }, []);
+
   // Handle column resize
   const handleColumnResize = useCallback((column, deltaX) => {
+    const minWidth = getMinColumnWidth(column);
     setColumnWidths(prev => ({
       ...prev,
-      [column]: Math.max(60, prev[column] + deltaX)
+      [column]: Math.max(minWidth, prev[column] + deltaX)
     }));
-  }, []);
+  }, [getMinColumnWidth]);
 
   const startResize = useCallback((e, column) => {
     e.preventDefault();
     const startX = e.clientX;
     const startWidth = columnWidths[column];
+    const minWidth = getMinColumnWidth(column);
 
     const handleMouseMove = (moveEvent) => {
       const deltaX = moveEvent.clientX - startX;
       setColumnWidths(prev => ({
         ...prev,
-        [column]: Math.max(60, startWidth + deltaX)
+        [column]: Math.max(minWidth, startWidth + deltaX)
       }));
     };
 
@@ -679,7 +696,7 @@ export function PHIEditorEnhancer({
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [columnWidths]);
+  }, [columnWidths, getMinColumnWidth]);
 
   // Apply all pending changes (shortcut to apply everything at once)
   const handleApplyAllChanges = useCallback(() => {
