@@ -99,45 +99,6 @@ describe('Dark Mode Integration', () => {
       expect(header.className).toContain('dark:bg-slate-900');
       expect(header.className).toContain('dark:border-slate-700');
     });
-
-    // TODO: Skipped because ThemeToggle was removed from Header in v2.7.2
-    // Theme controls are now in Settings → Appearance tab
-    it.skip('ThemeToggle in Header shows correct icon in dark mode', () => {
-      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
-
-      renderWithProviders(<Header />);
-
-      const header = screen.getByRole('banner');
-      const themeButton = within(header).getByRole('button', { name: /switch to light mode/i });
-
-      expect(themeButton).toBeInTheDocument();
-
-      // Sun icon should be visible in dark mode
-      const sunIcon = themeButton.querySelector('.lucide-sun');
-      const classValue = sunIcon.getAttribute('class');
-      expect(classValue).toContain('scale-100');
-      expect(classValue).toContain('opacity-100');
-    });
-
-    // TODO: Skipped because ThemeToggle was removed from Header in v2.7.2
-    // Theme controls are now in Settings → Appearance tab
-    it.skip('toggles Header appearance when switching themes', async () => {
-      const user = userEvent.setup();
-
-      renderWithProviders(<Header />);
-
-      const header = screen.getByRole('banner');
-      const themeButton = within(header).getByRole('button', { name: /switch to dark mode/i });
-
-      // Start in light mode - check that dark mode classes exist but aren't active
-      expect(header.className).toContain('bg-white');
-
-      // Toggle to dark
-      await user.click(themeButton);
-
-      // DOM should have dark class
-      expect(document.documentElement.classList.contains('dark')).toBe(true);
-    });
   });
 
   describe('Footer Dark Mode Styling', () => {
@@ -163,38 +124,6 @@ describe('Dark Mode Integration', () => {
   });
 
   describe('Multi-Component Dark Mode Sync', () => {
-    // TODO: Skipped because ThemeToggle was removed from Header in v2.7.2
-    // Theme controls are now in Settings → Appearance tab
-    it.skip('synchronizes theme across Header, Footer, and ThemeToggle', async () => {
-      const user = userEvent.setup();
-
-      renderWithProviders(
-        <>
-          <Header />
-          <Footer />
-          <ThemeToggle />
-        </>
-      );
-
-      // All should start in light mode
-      expect(document.documentElement.classList.contains('dark')).toBe(false);
-
-      // Toggle from standalone ThemeToggle (get all buttons and use first one)
-      const toggleButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
-      await user.click(toggleButtons[0]);
-
-      // Verify DOM has dark class
-      expect(document.documentElement.classList.contains('dark')).toBe(true);
-
-      // Verify localStorage
-      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
-
-      // Find the ThemeToggle in Header and verify it also updated
-      const header = screen.getByRole('banner');
-      const headerThemeButton = within(header).getByRole('button', { name: /switch to light mode/i });
-      expect(headerThemeButton).toBeInTheDocument();
-    });
-
     it('maintains theme consistency across rapid toggles', async () => {
       const user = userEvent.setup();
 

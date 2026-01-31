@@ -592,44 +592,4 @@ describe('MermaidDiagram', () => {
       expect(afterButton).toBe(initialButton);
     });
   });
-
-  describe.skip('Console Logging', () => {
-    // SKIPPED: Console logging was removed from production code
-    // These tests are outdated and should be removed or updated
-    it('should log render events in development', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const user = userEvent.setup();
-      const chart = 'flowchart TD\n    A --> B';
-
-      render(<MermaidDiagram chart={chart} id="log-1" />);
-
-      const button = screen.getByRole('button', { name: /show/i });
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalled();
-      });
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should log errors when render fails', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const user = userEvent.setup();
-      const chart = 'invalid';
-
-      mermaid.render.mockRejectedValue(new Error('Test error'));
-
-      render(<MermaidDiagram chart={chart} id="log-2" />);
-
-      const button = screen.getByRole('button', { name: /show/i });
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalled();
-      });
-
-      consoleErrorSpy.mockRestore();
-    });
-  });
 });

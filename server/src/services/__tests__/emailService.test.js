@@ -438,7 +438,8 @@ describe('Email Service', () => {
       });
 
       const callArgs = mockSendEmail.mock.calls[0][0];
-      expect(callArgs.html).toMatch(/#9333ea|#6366f1|purple|indigo/i);
+      // Check for purple-600 (#7c3aed) and indigo-600 (#4f46e5)
+      expect(callArgs.html).toMatch(/#7c3aed|#4f46e5/i);
     });
   });
 
@@ -791,7 +792,7 @@ describe('Email Service', () => {
       });
 
       const callArgs = mockSendEmail.mock.calls[0][0];
-      expect(callArgs.html).toContain('white-space: pre-wrap');
+      expect(callArgs.html).toContain('white-space:pre-wrap');
       expect(callArgs.html).toContain('Line 1\nLine 2\nLine 3');
     });
   });

@@ -67,48 +67,6 @@ describe('rateLimitBypass Middleware', () => {
       // Verify
       expect(next).toHaveBeenCalledTimes(1);
     });
-
-    it.skip('should log bypass in development mode (REMOVED: debug logging cleaned up)', () => {
-      // Setup
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
-      req.user = {
-        id: 'admin-123',
-        role: 'admin',
-      };
-
-      // Execute
-      rateLimitBypass(req, res, next);
-
-      // Verify
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('[RateLimitBypass] User admin-123 (admin) bypassing rate limit')
-      );
-      expect(next).toHaveBeenCalledTimes(1);
-
-      // Cleanup
-      process.env.NODE_ENV = originalEnv;
-    });
-
-    it.skip('should NOT log bypass in production mode (REMOVED: debug logging cleaned up)', () => {
-      // Setup
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-      req.user = {
-        id: 'admin-123',
-        role: 'admin',
-      };
-
-      // Execute
-      rateLimitBypass(req, res, next);
-
-      // Verify
-      expect(console.log).not.toHaveBeenCalled();
-      expect(next).toHaveBeenCalledTimes(1);
-
-      // Cleanup
-      process.env.NODE_ENV = originalEnv;
-    });
   });
 
   describe('User without bypass privileges', () => {

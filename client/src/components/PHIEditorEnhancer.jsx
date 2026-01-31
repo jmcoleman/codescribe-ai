@@ -1363,7 +1363,7 @@ export function PHIEditorEnhancer({
                           </td>
                         )}
                         {columnWidths.found > 0 && (
-                          <td className="phi-col-found" role="gridcell">
+                          <td className="phi-col-found" role="gridcell" title="Original detected PHI (immutable)">
                             <code>{item.value}</code>
                           </td>
                         )}
@@ -1454,8 +1454,8 @@ export function PHIEditorEnhancer({
                                   handleRevertPHI(item.id);
                                 }}
                                 className="phi-btn-action phi-btn-revert"
-                                title="Revert to pending"
-                                aria-label="Revert to pending"
+                                title="Revert to original"
+                                aria-label="Revert to original PHI value"
                               >
                                 <Undo className="w-3.5 h-3.5" />
                               </button>

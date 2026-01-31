@@ -184,16 +184,6 @@ describe('PricingPage', () => {
       expect(screen.getByText('$199')).toBeInTheDocument(); // Team monthly
     });
 
-    it.skip('should render supported languages section', () => {
-      // Section removed from pricing page in v3.5.3
-      renderPricingPage();
-
-      expect(screen.getByText('Full Language Support')).toBeInTheDocument();
-      expect(screen.getByText('JavaScript')).toBeInTheDocument();
-      expect(screen.getByText('TypeScript')).toBeInTheDocument();
-      expect(screen.getByText('Python')).toBeInTheDocument();
-    });
-
     it('should render back button', () => {
       // Back button only shows when there's navigation history
       // It uses aria-label="Go back" not just "back"

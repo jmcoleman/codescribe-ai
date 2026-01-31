@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** January 28, 2026 (v3.5.3)
-**Total Skipped:** 77 frontend tests + 67 backend tests = **144 total**
+**Last Updated:** January 31, 2026 (v3.5.6)
+**Total Skipped:** 71 frontend tests + 65 backend tests = **136 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -12,27 +12,23 @@
 
 | Category | Location | Count | Impact | Reason |
 |----------|----------|-------|--------|--------|
-| **Frontend Tests** | | **34** | | |
-| GitHub Import Feature | ControlBar | 6 | ✅ None | Feature not implemented (Phase 3) |
+| **Frontend Tests** | | **28** | | |
 | Focus Management Tests | SamplesModal | 4 | ✅ None | jsdom limitations |
 | Timing-Dependent Tests | CopyButton | 4 | ✅ None | Prevent flaky CI/CD |
 | React 18 Batching Tests | ContactSalesModal, ContactSupportModal | 4 | ✅ None | Loading/success state race conditions |
-| Header ThemeToggle Tests | DarkModeIntegration | 3 | ✅ None | Feature moved to Settings → Appearance (v2.7.2) |
 | Email Verification Tests | UnverifiedEmailBanner | 3 | ✅ None | Email rate limiting timing issues |
 | Focus Management Edge Cases | LoginModal | 2 | ✅ None | jsdom limitations |
-| Debug Logging Tests | MermaidDiagram | 2 | ✅ None | Development only (console logging removed) |
 | CI Environment Tests | ContactSupportModal, ContactSalesModal | 2 | ✅ None | Text matching fails in CI only |
+| GitHub Import E2E Test | ControlBar | 1 | ✅ None | Headless UI dropdown interaction timing issue |
 | Focus Trap Edge Cases | useFocusTrap | 1 | ✅ None | jsdom limitations |
 | Focus Restoration | QualityScore | 1 | ✅ None | jsdom limitations |
 | Restore Account Tests | RestoreAccount | 1 | ✅ None | Email rate limiting timing issues |
-| Removed UI Section Test | PricingPage | 1 | ✅ None | Languages section removed in v3.5.3 pricing restructure |
-| **Backend Tests** | | **67** | | |
+| **Backend Tests** | | **65** | | |
 | HIPAA Audit Log Integration | models, routes | 33 | ✅ None | Requires Docker test database (run with npm run test:db) |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
 | Password Change Tests | tests/integration | 5 | ✅ None | Jest mocking issues with @vercel/postgres tagged template literals |
-| Debug Logging Tests | rateLimitBypass | 2 | ✅ None | Console logging removed in cleanup (v2.7.10) |
 
-**Total Skipped:** 144 tests (77 frontend, 67 backend)
+**Total Skipped:** 136 tests (71 frontend, 65 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 
@@ -46,61 +42,6 @@ testPathIgnorePatterns: ['/src/db/__tests__/']
 ```
 
 These tests run separately with `npm run test:db` in Docker sandbox **before** deployment. They are not "skipped" tests (no `.skip()`) - they're infrastructure tests that require a database. See [DB-MIGRATION-MANAGEMENT.MD](../database/DB-MIGRATION-MANAGEMENT.MD) for details.
-
----
-
-## 🟡 Frontend: GitHub Import Feature (6 tests)
-
-### Status: ✅ **NOT YET IMPLEMENTED (Phase 3, Epic 3.3)**
-
-### File
-`client/src/components/__tests__/ControlBar.test.jsx`
-
-### Skipped Tests
-1. **Line 96:** `should call onGithubImport when clicked`
-   - Tests GitHub button click handler
-   - Feature: Import single file from GitHub URL
-
-2. **Line 108:** `should disable github button when disabled prop is true`
-   - Tests disabled state for GitHub button
-   - Feature: Button state management
-
-3. **Line 115:** `should have secondary variant styling`
-   - Tests GitHub button uses secondary variant
-   - Feature: Consistent button styling
-
-4. **Line 122:** `should display github icon`
-   - Tests GitHub icon renders correctly
-   - Feature: Visual button indicator
-
-5. **Line 129:** `should show responsive text content`
-   - Tests "Load from GitHub" text on desktop, hidden on mobile
-   - Feature: Responsive button text
-
-6. **Line 513:** `should handle github import → select type → generate`
-   - End-to-end test for GitHub import workflow
-   - Feature: Complete GitHub import flow
-
-### Why Skipped
-Feature is **not yet implemented** and hidden behind feature flag:
-```javascript
-const ENABLE_GITHUB_IMPORT = false; // Phase 3, Epic 3.3
-```
-
-### When to Unskip
-**Phase 3, Epic 3.3** - GitHub Single-File Import
-- Create GitHub URL parser utility
-- Add "Load from GitHub" button to ControlBar
-- Create GitHubImportModal component
-- Fetch file from raw.githubusercontent.com
-- Handle CORS, 404, rate limits
-- Unskip all 6 tests and verify they pass
-
-### Documentation
-- [TODO.md - Epic 3.3](../planning/TODO.md#epic-33-advanced-file-handling) - Implementation plan
-
-### Production Impact
-✅ **NONE** - Button is hidden in production UI (`ENABLE_GITHUB_IMPORT = false`)
 
 ---
 
@@ -400,6 +341,51 @@ Both features are **fully tested** by other passing tests:
 
 ### Production Impact
 ✅ **NONE** - Features work correctly in production, validated manually and by other tests
+
+---
+
+## 🟡 Frontend: GitHub Import E2E Test (1 test)
+
+### Status: ✅ **HEADLESS UI DROPDOWN INTERACTION TIMING**
+
+### File
+`client/src/components/__tests__/ControlBar.test.jsx`
+
+### Skipped Test
+**Line 428:** `should handle github import → select type → generate`
+- End-to-end test for complete GitHub import workflow
+- Tests sequential interaction with two Headless UI dropdowns
+- Comment: "Headless UI dropdown interaction issue - after clicking menu item in Add Code dropdown, the Doc Type Select dropdown doesn't properly render options in test environment"
+
+### Why Skipped
+**Headless UI portal rendering timing issue** in test environment:
+- After interacting with first dropdown (Add Code menu), second dropdown (Doc Type select) fails to render options
+- Portal-rendered dropdowns have async timing issues when tested sequentially
+- This is a **test environment limitation**, not a production bug
+
+### Coverage
+GitHub import feature is **fully tested** with 5 passing tests:
+- ✅ Renders GitHub import menu item
+- ✅ Calls onGithubImport when clicked
+- ✅ Displays GitHub icon in menu
+- ✅ Respects disabled state
+- ✅ Proper button styling
+
+**Feature Status:** ✅ **FULLY IMPLEMENTED AND WORKING** (v2.8.0+)
+- Feature flag: `ENABLE_GITHUB_IMPORT = true`
+- Available in "Add Code" dropdown menu
+- Production-ready since v2.8.0
+
+### Manual Verification
+Complete GitHub import workflow works correctly in production:
+- ✅ Open Add Code dropdown
+- ✅ Click "Import from GitHub"
+- ✅ GitHubImportModal opens
+- ✅ Can select doc type
+- ✅ Can generate documentation
+
+### Production Impact
+✅ **NONE** - GitHub import works perfectly in production, validated by 5 passing tests + manual testing
 
 ---
 

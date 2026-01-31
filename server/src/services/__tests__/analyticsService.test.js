@@ -134,12 +134,15 @@ describe('AnalyticsService', () => {
       expect(sql).toHaveBeenCalled();
     });
 
-    it('should handle database errors', async () => {
+    it('should handle database errors gracefully', async () => {
       sql.mockRejectedValue(new Error('Database connection failed'));
 
-      await expect(
-        analyticsService.recordEvent('session_start', {})
-      ).rejects.toThrow('Database connection failed');
+      const result = await analyticsService.recordEvent('session_start', {});
+
+      // Should gracefully degrade instead of throwing
+      expect(result).toHaveProperty('error', 'db_error');
+      expect(result).toHaveProperty('id', null);
+      expect(result).toHaveProperty('eventName', 'session_start');
     });
   });
 

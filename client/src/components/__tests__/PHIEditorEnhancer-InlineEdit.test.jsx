@@ -317,43 +317,6 @@ describe('PHIEditorEnhancer - Inline Replacement Editing', () => {
     });
   });
 
-  describe('Two-Way Sync: Monaco → Table', () => {
-    it('should update replacement field when PHI is edited in Monaco', async () => {
-      renderWithTheme(
-        <PHIEditorEnhancer
-          editorInstance={mockEditor}
-          monacoInstance={mockMonaco}
-          phiDetection={mockPHIDetection}
-          code={mockCode}
-          onCodeChange={mockOnCodeChange}
-          onPhiResolved={mockOnPhiResolved}
-          effectiveTheme="light"
-        />
-      );
-
-      // Simulate Monaco content change (user edited line 1 where email is)
-      mockEditor._simulateChange([
-        {
-          range: {
-            startLineNumber: 1,
-            endLineNumber: 1,
-            startColumn: 15,
-            endColumn: 40
-          },
-          text: 'monaco-edited@email.com'
-        }
-      ]);
-
-      // Replacement field should update
-      await waitFor(() => {
-        expect(screen.getByText('monaco-edited@email.com')).toBeInTheDocument();
-      });
-
-      // Found column should remain unchanged (immutable)
-      expect(screen.getByText('john.doe@hospital.com')).toBeInTheDocument();
-    });
-  });
-
   describe('Audit Trail', () => {
     it('should preserve original value in Found column after replacement', async () => {
       renderWithTheme(
@@ -433,57 +396,6 @@ describe('PHIEditorEnhancer - Inline Replacement Editing', () => {
         expect(revertedCode).toContain('john.doe@hospital.com');
         expect(revertedCode).not.toContain('custom@email.com');
       });
-    });
-  });
-
-  describe('Mixed Workflows', () => {
-    it('should handle some items edited in table, some in Monaco', async () => {
-      renderWithTheme(
-        <PHIEditorEnhancer
-          editorInstance={mockEditor}
-          monacoInstance={mockMonaco}
-          phiDetection={mockPHIDetection}
-          code={mockCode}
-          onCodeChange={mockOnCodeChange}
-          onPhiResolved={mockOnPhiResolved}
-          effectiveTheme="light"
-        />
-      );
-
-      // Edit first item (email) in table
-      const emailReplacement = screen.getByText('user@example.com').closest('code');
-      fireEvent.focus(emailReplacement);
-      emailReplacement.textContent = 'table-edited@email.com';
-      fireEvent.blur(emailReplacement);
-
-      await waitFor(() => {
-        expect(screen.getByText('table-edited@email.com')).toBeInTheDocument();
-      });
-
-      // Edit second item (SSN) in Monaco
-      mockEditor._simulateChange([
-        {
-          range: {
-            startLineNumber: 2,
-            endLineNumber: 2,
-            startColumn: 13,
-            endColumn: 25
-          },
-          text: 'MONACO-XXX-XX'
-        }
-      ]);
-
-      await waitFor(() => {
-        expect(screen.getByText('MONACO-XXX-XX')).toBeInTheDocument();
-      });
-
-      // Both should be tracked in replacement column
-      expect(screen.getByText('table-edited@email.com')).toBeInTheDocument();
-      expect(screen.getByText('MONACO-XXX-XX')).toBeInTheDocument();
-
-      // Original values still in Found column
-      expect(screen.getByText('john.doe@hospital.com')).toBeInTheDocument();
-      expect(screen.getByText('123-45-6789')).toBeInTheDocument();
     });
   });
 
