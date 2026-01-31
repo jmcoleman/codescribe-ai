@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.41",
-    "footer": "v3.5.5 Complete · Email Template Enterprise Polish ✓ · Purpose-First Messaging ✓ · Professional Tier Presentation ✓",
-    "lastUpdated": "January 29, 2026"
+    "footer": "v3.5.6 Complete · PHI Inline Editing ✓ · Resizable Columns ✓ · WCAG Accessibility ✓ · 100% Test Pass Rate ✓",
+    "lastUpdated": "January 31, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,32 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.5.6",
+          "title": "PHI Workflow Overhaul with Inline Editing & Accessibility",
+          "duration": "5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 31, 2026",
+          "badge": "Major Feature",
+          "features": [
+            "Edit PHI replacements directly in table with real-time Monaco editor synchronization",
+            "Revert accepted or skipped items back to pending state for flexible workflow control",
+            "Resizable table columns with 1px minimum allows users to customize their workspace layout",
+            "Skip all pending items with single click for faster bulk operations",
+            "Row numbers and line numbers help users track PHI locations in source code",
+            "Automatic column hiding on mobile and tablet devices improves small screen usability",
+            "Keyboard navigation enhancements with automatic tab focus mode for seamless editing",
+            "WCAG accessibility improvements ensure keyboard-only users can complete all workflows",
+            "Shared banner component provides consistent visual language across the application",
+            "Independent banner and drawer controls prevent accidental workspace loss",
+            "Shortened panel title shows exact PHI counts for faster information scanning",
+            "Repositioned toggle control to top-right corner follows platform conventions",
+            "Clearer PHI table controls with 'Revert to original' button label for immediate understanding",
+            "Tooltip on Found column explains original PHI values cannot be edited inline",
+            "Improved system reliability with better database connection handling",
+            "All automated tests passing providing confidence in system stability"
+          ]
+        },
         {
           "version": "v3.5.5",
           "title": "Email Template Enterprise Polish",
