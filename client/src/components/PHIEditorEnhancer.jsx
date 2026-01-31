@@ -119,6 +119,7 @@ export function PHIEditorEnhancer({
   const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
   const [columnWidths, setColumnWidths] = useState({
     status: 120,
+    id: 200, // Show unique ID and contentId for debugging
     type: 180,
     found: 400, // Large width to minimize ellipsis - immutable audit record
     replacement: 350, // Large width to show full replacement values - editable
@@ -940,6 +941,23 @@ export function PHIEditorEnhancer({
                       </div>
                     </th>
                     <th
+                      className="phi-col-id phi-col-resizable"
+                      style={{ width: `${columnWidths.id}px` }}
+                      role="columnheader"
+                    >
+                      <div className="phi-col-header">
+                        <span className="phi-col-sort-btn" title="Unique ID and Content ID">
+                          ID (Unique / Content)
+                        </span>
+                        <div
+                          className="phi-col-resize-handle"
+                          onMouseDown={(e) => startResize(e, 'id')}
+                        >
+                          <GripVertical className="w-3 h-3" />
+                        </div>
+                      </div>
+                    </th>
+                    <th
                       className="phi-col-type phi-col-resizable"
                       style={{ width: `${columnWidths.type}px` }}
                       role="columnheader"
@@ -1055,6 +1073,16 @@ export function PHIEditorEnhancer({
                                 <span className="phi-status-text">Pending</span>
                               </>
                             )}
+                          </div>
+                        </td>
+                        <td className="phi-col-id" role="gridcell">
+                          <div className="phi-id-display">
+                            <div className="phi-unique-id" title="Unique ID for this occurrence">
+                              {item.id}
+                            </div>
+                            <div className="phi-content-id" title="Content ID (shared across occurrences)">
+                              {item.contentId}
+                            </div>
                           </div>
                         </td>
                         <td className="phi-col-type" role="gridcell">

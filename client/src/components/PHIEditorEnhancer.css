@@ -396,6 +396,47 @@
   font-weight: 500;
 }
 
+.phi-col-id {
+  min-width: 180px;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phi-id-display {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.phi-unique-id {
+  font-weight: 600;
+}
+
+.phi-review-panel.light .phi-unique-id {
+  color: #7c3aed; /* purple-600 - unique ID */
+}
+
+.phi-review-panel.dark .phi-unique-id {
+  color: #c084fc; /* purple-400 - unique ID */
+}
+
+.phi-content-id {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.phi-review-panel.light .phi-content-id {
+  color: #64748b; /* slate-500 - shared content ID */
+}
+
+.phi-review-panel.dark .phi-content-id {
+  color: #94a3b8; /* slate-400 - shared content ID */
+}
+
 .phi-col-type {
   min-width: 120px;
 }
