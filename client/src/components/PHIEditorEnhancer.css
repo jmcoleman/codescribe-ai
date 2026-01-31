@@ -396,6 +396,15 @@
   font-weight: 500;
 }
 
+.phi-col-number {
+  min-width: 40px;
+  text-align: center;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
 .phi-col-line {
   min-width: 60px;
   text-align: right;

@@ -118,6 +118,7 @@ export function PHIEditorEnhancer({
   const [confirmed, setConfirmed] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
   const [columnWidths, setColumnWidths] = useState({
+    number: 50, // Row number for easy reference
     status: 120,
     line: 80, // Line number column
     id: 200, // Unique ID for each occurrence
@@ -922,6 +923,14 @@ export function PHIEditorEnhancer({
                 <thead>
                   <tr role="row">
                     <th
+                      className="phi-col-number"
+                      style={{ width: `${columnWidths.number}px` }}
+                      role="columnheader"
+                      title="Entry number in table"
+                    >
+                      #
+                    </th>
+                    <th
                       className="phi-col-status phi-col-resizable"
                       style={{ width: `${columnWidths.status}px` }}
                       role="columnheader"
@@ -1082,6 +1091,9 @@ export function PHIEditorEnhancer({
                         aria-rowindex={index + 1}
                         aria-selected={isCurrent}
                       >
+                        <td className="phi-col-number" role="gridcell">
+                          {index + 1}
+                        </td>
                         <td className="phi-col-status" role="gridcell">
                           <div className="phi-status-cell">
                             {state === 'accepted' && (
