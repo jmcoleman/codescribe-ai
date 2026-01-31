@@ -454,7 +454,16 @@ export function PHIEditorEnhancer({
     });
   }, [phiItems, originalValues, customReplacements, code, onCodeChange, editorInstance]);
 
-  // Revert all applied changes at once
+  // Revert a skipped item back to pending
+  const handleUnskipPHI = useCallback((itemId) => {
+    setReviewState(prev => {
+      const updated = { ...prev };
+      delete updated[itemId];
+      return updated;
+    });
+  }, []);
+
+  // Revert all applied changes and skipped items at once
   const handleRevertAllChanges = useCallback(() => {
     let revertedCode = code;
     const reversions = [];
@@ -478,11 +487,11 @@ export function PHIEditorEnhancer({
       onCodeChange(revertedCode);
     }
 
-    // Reset all accepted items to pending
+    // Reset all accepted AND skipped items to pending
     setReviewState(prev => {
       const updated = { ...prev };
       Object.keys(updated).forEach(id => {
-        if (updated[id] === 'accepted') {
+        if (updated[id] === 'accepted' || updated[id] === 'skipped') {
           delete updated[id];
         }
       });
@@ -767,6 +776,7 @@ export function PHIEditorEnhancer({
   const reviewedCount = Object.keys(reviewState).length;
   const acceptedCount = Object.values(reviewState).filter(s => s === 'accepted').length;
   const skippedCount = Object.values(reviewState).filter(s => s === 'skipped').length;
+  const revertableCount = acceptedCount + skippedCount; // Both can be reverted
   const pendingCount = phiItems.length - reviewedCount;
   const progress = phiItems.length > 0 ? (reviewedCount / phiItems.length) * 100 : 0;
 
@@ -1110,14 +1120,28 @@ export function PHIEditorEnhancer({
                                   handleRevertPHI(item.id);
                                 }}
                                 className="phi-btn-action phi-btn-revert"
-                                title="Revert to original"
-                                aria-label="Revert to original"
+                                title="Revert to pending"
+                                aria-label="Revert to pending"
                               >
                                 <Undo className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           )}
-                          {state === 'skipped' && <span className="phi-state-label">Skipped</span>}
+                          {state === 'skipped' && (
+                            <div className="phi-action-buttons">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUnskipPHI(item.id);
+                                }}
+                                className="phi-btn-action phi-btn-unskip"
+                                title="Revert to pending"
+                                aria-label="Revert to pending"
+                              >
+                                <Undo className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );
@@ -1147,12 +1171,12 @@ export function PHIEditorEnhancer({
                 )}
                 <button
                   onClick={handleRevertAllChanges}
-                  disabled={acceptedCount === 0}
+                  disabled={revertableCount === 0}
                   className="phi-btn-revert-all"
-                  aria-label={`Revert ${acceptedCount} applied items`}
+                  aria-label={`Revert ${revertableCount} reviewed items (${acceptedCount} accepted, ${skippedCount} skipped)`}
                 >
                   <Undo className="w-4 h-4" />
-                  Revert All ({acceptedCount})
+                  Revert All ({revertableCount})
                 </button>
                 <button
                   onClick={handleSkipAllPending}
