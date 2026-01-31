@@ -1024,10 +1024,7 @@ export function PHIEditorEnhancer({
         >
           <div className="phi-panel-title">
             <AlertTriangle className="w-5 h-5" aria-hidden="true" />
-            <span>
-              <span className="lg:hidden">PHI Detected ({totalUniquePhiCount} unique, {phiItems.length} total)</span>
-              <span className="hidden lg:inline">Protected Health Information Detected ({totalUniquePhiCount} unique values, {phiItems.length} occurrences)</span>
-            </span>
+            <span>PHI Detected ({totalUniquePhiCount} unique, {phiItems.length} total)</span>
             {phiDetection?.confidence && (
               <span
                 className={`phi-confidence-badge phi-confidence-${phiDetection.confidence}`}
@@ -1049,8 +1046,8 @@ export function PHIEditorEnhancer({
               checked={confirmed}
               onChange={(e) => {
                 setConfirmed(e.target.checked);
-                if (e.target.checked && onProceed) {
-                  onProceed();
+                if (onProceed) {
+                  onProceed(e.target.checked);
                 }
               }}
               className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 dark:text-purple-400 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-0 transition-colors flex-shrink-0"
@@ -1065,6 +1062,7 @@ export function PHIEditorEnhancer({
             </span>
           </label>
 
+          {/* Expand/Collapse Toggle - Top Right */}
           <div
             className="phi-panel-toggle"
             onClick={(e) => {
@@ -1090,11 +1088,11 @@ export function PHIEditorEnhancer({
         {panelExpanded && (
           <div id="phi-panel-content">
             {/* Stats and Reset Columns Row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px 12px' }}>
+            <div className="phi-stats-row">
               <div className="phi-stats">
-                <span className="phi-stat-accepted">✓ {acceptedCount} Accepted</span>
-                <span className="phi-stat-skipped">⊘ {skippedCount} Skipped</span>
-                <span className="phi-stat-pending">⋯ {pendingCount} Pending</span>
+                <span className="phi-stat-accepted">{acceptedCount} Accepted</span>
+                <span className="phi-stat-skipped">{skippedCount} Skipped</span>
+                <span className="phi-stat-pending">{pendingCount} Pending</span>
               </div>
               <button
                 className="phi-reset-columns-btn"
@@ -1490,7 +1488,7 @@ export function PHIEditorEnhancer({
             {/* Footer Actions */}
             <div className="phi-panel-footer">
               <div className="phi-footer-left">
-                Progress: {reviewedCount}/{totalUniquePhiCount} Unique PHI Reviewed
+                Progress: {reviewedCount}/{totalUniquePhiCount} Reviewed
               </div>
               <div className="phi-footer-right">
                 {/* Navigation buttons */}
@@ -1527,27 +1525,27 @@ export function PHIEditorEnhancer({
                   disabled={revertableCount === 0}
                   className="phi-btn-revert-all"
                   aria-label={`Revert ${revertableCount} reviewed items (${acceptedCount} accepted, ${skippedCount} skipped)`}
+                  title="Revert all changes"
                 >
-                  <Undo className="w-4 h-4" />
-                  Revert All ({revertableCount})
+                  Revert ({revertableCount})
                 </button>
                 <button
                   onClick={handleSkipAllPending}
                   disabled={pendingCount === 0}
                   className="phi-btn-skip-all"
                   aria-label={`Skip ${pendingCount} pending items`}
+                  title="Skip all pending items"
                 >
-                  <X className="w-4 h-4" />
-                  Skip All ({pendingCount})
+                  Skip ({pendingCount})
                 </button>
                 <button
                   onClick={handleApplyAllChanges}
                   disabled={pendingCount === 0}
                   className="phi-btn-apply-all"
                   aria-label={`Apply ${pendingCount} pending items`}
+                  title="Apply all pending changes"
                 >
-                  <Check className="w-4 h-4" />
-                  Apply All ({pendingCount})
+                  Apply ({pendingCount})
                 </button>
               </div>
             </div>

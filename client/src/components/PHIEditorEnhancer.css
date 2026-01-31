@@ -97,27 +97,30 @@
 }
 
 .phi-review-panel.expanded {
-  max-height: 400px;
+  max-height: 500px; /* Increased to accommodate stacked footer */
   margin-bottom: 0;
 }
 
 .phi-review-panel.collapsed {
-  max-height: 48px;
-  margin-bottom: 40px;
+  max-height: 40px;
+  margin-bottom: 0;
+  overflow: hidden; /* Ensure no content shows below header when collapsed */
 }
 
 @media (max-width: 640px) {
   .phi-review-panel.collapsed {
-    margin-bottom: 60px;
+    margin-bottom: 0;
   }
 }
 
 /* Panel Header */
 .phi-panel-header {
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px 48px 12px 16px; /* Extra padding-right for toggle button */
   user-select: none;
   outline: none;
   border-radius: 4px;
@@ -157,6 +160,8 @@
 
 .phi-review-panel.collapsed .phi-panel-header {
   border-bottom: none;
+  margin: 0; /* Remove all margin when collapsed */
+  padding: 8px 48px 8px 16px; /* Reduce padding when collapsed for tighter fit */
 }
 
 .phi-panel-title {
@@ -179,7 +184,6 @@
   cursor: pointer;
   flex-shrink: 1;
   min-width: 0;
-  margin-left: auto;
 }
 
 .phi-header-confirmation span {
@@ -199,46 +203,56 @@
 }
 
 .phi-reset-columns-btn {
-  padding: 4px 8px;
+  padding: 6px 12px;
   font-size: 12px;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 6px;
   border: 1px solid;
-  background: transparent;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .phi-review-panel.light .phi-reset-columns-btn {
-  color: #64748b; /* slate-500 */
+  background: #fff;
   border-color: #cbd5e1; /* slate-300 */
+  color: #475569; /* slate-600 */
 }
 
 .phi-review-panel.dark .phi-reset-columns-btn {
-  color: #94a3b8; /* slate-400 */
+  background: #1e293b; /* slate-800 */
   border-color: #475569; /* slate-600 */
+  color: #cbd5e1; /* slate-300 */
 }
 
 .phi-review-panel.light .phi-reset-columns-btn:hover {
-  color: #475569; /* slate-600 */
+  background: #f8fafc; /* slate-50 */
   border-color: #94a3b8; /* slate-400 */
-  background: rgba(0, 0, 0, 0.02);
 }
 
 .phi-review-panel.dark .phi-reset-columns-btn:hover {
-  color: #cbd5e1; /* slate-300 */
+  background: #334155; /* slate-700 */
   border-color: #64748b; /* slate-500 */
-  background: rgba(255, 255, 255, 0.05);
 }
 
 .phi-panel-toggle {
+  position: absolute;
+  top: 12px;
+  right: 16px;
   display: flex;
   align-items: center;
   padding: 4px;
   opacity: 0.7;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.phi-panel-toggle svg {
+  color: inherit; /* Override amber color from phi-panel-title */
 }
 
 .phi-panel-toggle:hover {
@@ -267,20 +281,24 @@
   transition: width 0.3s ease;
 }
 
-/* Stats - Enterprise neutral styling */
+/* Stats Row Container */
+.phi-stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 16px 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Stats - Match footer progress text styling */
 .phi-stats {
   display: flex;
   gap: 16px;
   font-size: 12px;
   font-weight: 500;
-}
-
-.phi-review-panel.light .phi-stats {
-  color: #475569; /* slate-600 */
-}
-
-.phi-review-panel.dark .phi-stats {
-  color: #94a3b8; /* slate-400 */
+  flex-wrap: wrap;
+  opacity: 0.8; /* Match footer progress text */
 }
 
 /* Items Table */
@@ -648,6 +666,8 @@
   justify-content: space-between;
   padding: 12px 16px;
   border-top: 1px solid;
+  gap: 12px;
+  flex-wrap: wrap; /* Allow wrapping if absolutely necessary */
 }
 
 .phi-review-panel.light .phi-panel-footer {
@@ -662,11 +682,14 @@
   font-size: 12px;
   font-weight: 500;
   opacity: 0.8;
+  flex-shrink: 0; /* Prevent text from shrinking */
 }
 
 .phi-footer-right {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap; /* Allow buttons to wrap if needed */
+  justify-content: flex-end; /* Right-align buttons */
 }
 
 /* Footer Buttons */
@@ -674,16 +697,17 @@
 .phi-btn-revert-all,
 .phi-btn-skip-all,
 .phi-btn-apply-all {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   border: 1px solid;
+  white-space: nowrap; /* Prevent text wrapping inside buttons */
 }
 
 /* Navigation, Revert All & Skip All - Secondary style */
@@ -757,6 +781,95 @@
 .phi-btn-nav:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Responsive Design - Narrow Screens */
+@media (max-width: 900px) {
+  /* Make stats row more compact */
+  .phi-stats-row {
+    padding: 0 12px 6px;
+    gap: 8px;
+  }
+
+  .phi-stats {
+    gap: 12px;
+    font-size: 11px;
+  }
+
+  .phi-reset-columns-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  /* Make footer buttons more compact */
+  .phi-btn-nav,
+  .phi-btn-revert-all,
+  .phi-btn-skip-all,
+  .phi-btn-apply-all {
+    padding: 6px 10px;
+    font-size: 11px;
+    gap: 3px;
+  }
+
+  .phi-btn-nav {
+    padding: 6px;
+  }
+
+  .phi-footer-right {
+    gap: 6px;
+  }
+
+  .phi-panel-footer {
+    padding: 8px 12px;
+  }
+
+  .phi-footer-left {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Even more compact on mobile */
+  .phi-stats-row {
+    padding: 0 8px 6px;
+    gap: 6px;
+  }
+
+  .phi-stats {
+    gap: 8px;
+    font-size: 10px;
+  }
+
+  .phi-reset-columns-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .phi-btn-nav,
+  .phi-btn-revert-all,
+  .phi-btn-skip-all,
+  .phi-btn-apply-all {
+    padding: 5px 8px;
+    font-size: 10px;
+    gap: 2px;
+  }
+
+  .phi-btn-nav {
+    padding: 5px;
+  }
+
+  .phi-footer-right {
+    gap: 4px;
+  }
+
+  .phi-footer-left {
+    font-size: 10px;
+  }
+
+  .phi-panel-footer {
+    padding: 8px;
+  }
 }
 
 /* Scrollbar Styling */

@@ -2116,20 +2116,18 @@ function App() {
   /**
    * Handler for dismissing PHI warning banner
    * User can edit code to remove PHI or dismiss if false positive
+   * Note: Keep phiDetection data so bottom panel remains visible
    */
   const handleDismissPhiWarning = () => {
     setShowPhiWarning(false);
-    setPhiDetection(null);
-    setPhiConfirmed(false);
   };
 
   /**
    * Handler for proceeding with generation despite PHI warning
    * User confirms they've verified no real PHI exists
    */
-  const handleProceedWithPhi = () => {
-    setPhiConfirmed(true);
-    setShowPhiWarning(false);
+  const handleProceedWithPhi = (confirmed = true) => {
+    setPhiConfirmed(confirmed);
   };
 
   /**
