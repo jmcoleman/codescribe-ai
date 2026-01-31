@@ -688,6 +688,8 @@ export function PHIEditorEnhancer({
 
   const sortedItems = getSortedItems();
 
+  // Always render if there are PHI items, regardless of editor state
+  // The panel will show even if editor refs are temporarily null during view transitions
   if (phiItems.length === 0) {
     return null;
   }
@@ -705,22 +707,14 @@ export function PHIEditorEnhancer({
         <div
           ref={panelHeaderRef}
           className="phi-panel-header"
-          onClick={() => setPanelExpanded(!panelExpanded)}
-          role="button"
-          tabIndex={-1}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setPanelExpanded(!panelExpanded);
-            }
-          }}
-          aria-expanded={panelExpanded}
-          aria-label={panelExpanded ? 'Collapse PHI review panel' : 'Expand PHI review panel'}
           aria-controls="phi-panel-content"
         >
           <div className="phi-panel-title">
             <AlertTriangle className="w-5 h-5" aria-hidden="true" />
-            <span>Protected Health Information Detected ({phiItems.length} items)</span>
+            <span>
+              <span className="lg:hidden">PHI Detected ({phiItems.length} items)</span>
+              <span className="hidden lg:inline">Protected Health Information Detected ({phiItems.length} items)</span>
+            </span>
             {phiDetection?.confidence && (
               <span
                 className={`phi-confidence-badge phi-confidence-${phiDetection.confidence}`}
@@ -730,7 +724,48 @@ export function PHIEditorEnhancer({
               </span>
             )}
           </div>
-          <div className="phi-panel-toggle">
+
+          {/* Confirmation Checkbox - In Header */}
+          <label
+            className="phi-header-confirmation"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              id="phi-confirmation-header"
+              checked={confirmed}
+              onChange={(e) => {
+                setConfirmed(e.target.checked);
+                if (e.target.checked && onProceed) {
+                  onProceed();
+                }
+              }}
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 dark:text-purple-400 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-0 transition-colors flex-shrink-0"
+              aria-describedby="phi-confirmation-header-label"
+            />
+            <span
+              id="phi-confirmation-header-label"
+              className="text-sm leading-tight text-slate-700 dark:text-slate-300 transition-opacity"
+            >
+              <span className="hidden sm:inline">I confirm this code contains no actual PHI and is safe to process</span>
+              <span className="sm:hidden">Confirm: No actual PHI</span>
+            </span>
+          </label>
+
+          <div
+            className="phi-panel-toggle"
+            onClick={() => setPanelExpanded(!panelExpanded)}
+            role="button"
+            tabIndex={-1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setPanelExpanded(!panelExpanded);
+              }
+            }}
+            aria-expanded={panelExpanded}
+            aria-label={panelExpanded ? 'Collapse PHI review panel' : 'Expand PHI review panel'}
+          >
             {panelExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </div>
         </div>
@@ -1000,31 +1035,6 @@ export function PHIEditorEnhancer({
                   Apply All Changes ({pendingCount})
                 </button>
               </div>
-            </div>
-
-            {/* Confirmation Checkbox */}
-            <div className="phi-panel-confirmation">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  id="phi-confirmation-drawer"
-                  checked={confirmed}
-                  onChange={(e) => {
-                    setConfirmed(e.target.checked);
-                    if (e.target.checked && onProceed) {
-                      onProceed();
-                    }
-                  }}
-                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 dark:text-purple-400 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-0 transition-colors flex-shrink-0"
-                  aria-describedby="phi-confirmation-drawer-label"
-                />
-                <span
-                  id="phi-confirmation-drawer-label"
-                  className="text-sm leading-tight text-slate-700 dark:text-slate-300 group-hover:opacity-75 transition-opacity"
-                >
-                  I confirm this code contains no actual PHI and is safe to process
-                </span>
-              </label>
             </div>
           </div>
         )}

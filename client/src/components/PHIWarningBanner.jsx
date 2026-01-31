@@ -35,37 +35,17 @@ export function PHIWarningBanner({ phiDetection, code, onCodeSanitized, onDismis
   const { confidence, findings, score, suggestions } = phiDetection;
 
   /**
-   * Get appropriate colors based on risk level
+   * Get banner colors - always yellow for PHI warnings
    * Follows BANNER-PATTERNS.md: slate backgrounds with colored accent borders
    */
-  const getRiskColors = () => {
-    if (confidence === 'high') {
-      return {
-        bg: 'bg-white dark:bg-slate-900',
-        border: 'border-red-500 dark:border-red-400',
-        text: 'text-slate-900 dark:text-white',
-        textBody: 'text-slate-700 dark:text-slate-300',
-        icon: 'text-red-600 dark:text-red-400',
-        button: 'bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600',
-      };
-    }
-    if (confidence === 'medium') {
-      return {
-        bg: 'bg-white dark:bg-slate-900',
-        border: 'border-amber-500 dark:border-amber-400',
-        text: 'text-slate-900 dark:text-white',
-        textBody: 'text-slate-700 dark:text-slate-300',
-        icon: 'text-amber-600 dark:text-amber-400',
-        button: 'bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600',
-      };
-    }
+  const getBannerColors = () => {
     return {
       bg: 'bg-white dark:bg-slate-900',
-      border: 'border-blue-500 dark:border-blue-400',
+      border: 'border-yellow-500 dark:border-yellow-400',
       text: 'text-slate-900 dark:text-white',
       textBody: 'text-slate-700 dark:text-slate-300',
-      icon: 'text-blue-600 dark:text-blue-400',
-      button: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600',
+      icon: 'text-yellow-600 dark:text-yellow-400',
+      button: 'bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-600',
     };
   };
 
@@ -82,7 +62,7 @@ export function PHIWarningBanner({ phiDetection, code, onCodeSanitized, onDismis
     return items || 'Healthcare-related patterns';
   };
 
-  const colors = getRiskColors();
+  const colors = getBannerColors();
 
   return (
     <Banner
