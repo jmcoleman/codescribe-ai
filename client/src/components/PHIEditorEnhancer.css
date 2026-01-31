@@ -396,45 +396,21 @@
   font-weight: 500;
 }
 
+.phi-col-line {
+  min-width: 60px;
+  text-align: right;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+}
+
 .phi-col-id {
   min-width: 180px;
   max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.phi-id-display {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 11px;
   font-family: 'Monaco', 'Courier New', monospace;
-}
-
-.phi-unique-id {
-  font-weight: 600;
-}
-
-.phi-review-panel.light .phi-unique-id {
-  color: #7c3aed; /* purple-600 - unique ID */
-}
-
-.phi-review-panel.dark .phi-unique-id {
-  color: #c084fc; /* purple-400 - unique ID */
-}
-
-.phi-content-id {
-  font-weight: 400;
-  opacity: 0.7;
-}
-
-.phi-review-panel.light .phi-content-id {
-  color: #64748b; /* slate-500 - shared content ID */
-}
-
-.phi-review-panel.dark .phi-content-id {
-  color: #94a3b8; /* slate-400 - shared content ID */
+  font-size: 11px;
 }
 
 .phi-col-type {
@@ -497,17 +473,7 @@
 
 .phi-items-table td {
   padding: 12px 16px; /* px-4 py-3 - matches BaseTable */
-  vertical-align: top;
-}
-
-.phi-type-label {
-  font-weight: 500;
-  font-size: 13px;
-}
-
-.phi-location {
-  font-size: 11px;
-  opacity: 0.7;
+  vertical-align: middle;
 }
 
 .phi-col-found code,

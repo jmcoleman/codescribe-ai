@@ -119,7 +119,8 @@ export function PHIEditorEnhancer({
   const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
   const [columnWidths, setColumnWidths] = useState({
     status: 120,
-    id: 200, // Show unique ID and contentId for debugging
+    line: 80, // Line number column
+    id: 200, // Unique ID for each occurrence
     type: 180,
     found: 400, // Large width to minimize ellipsis - immutable audit record
     replacement: 350, // Large width to show full replacement values - editable
@@ -619,6 +620,10 @@ export function PHIEditorEnhancer({
           aVal = reviewState[a.contentId] || 'pending';
           bVal = reviewState[b.contentId] || 'pending';
           break;
+        case 'line':
+          aVal = a.lineNumber;
+          bVal = b.lineNumber;
+          break;
         case 'type':
           aVal = a.type;
           bVal = b.type;
@@ -941,13 +946,37 @@ export function PHIEditorEnhancer({
                       </div>
                     </th>
                     <th
+                      className="phi-col-line phi-col-resizable"
+                      style={{ width: `${columnWidths.line}px` }}
+                      role="columnheader"
+                    >
+                      <div className="phi-col-header">
+                        <button
+                          className="phi-col-sort-btn"
+                          onClick={() => handleSort('line')}
+                          title="Sort by line number"
+                        >
+                          Line
+                          {sortConfig.key === 'line' && (
+                            <ArrowUpDown className="w-3 h-3 ml-1" />
+                          )}
+                        </button>
+                        <div
+                          className="phi-col-resize-handle"
+                          onMouseDown={(e) => startResize(e, 'line')}
+                        >
+                          <GripVertical className="w-3 h-3" />
+                        </div>
+                      </div>
+                    </th>
+                    <th
                       className="phi-col-id phi-col-resizable"
                       style={{ width: `${columnWidths.id}px` }}
                       role="columnheader"
                     >
                       <div className="phi-col-header">
-                        <span className="phi-col-sort-btn" title="Unique ID and Content ID">
-                          ID (Unique / Content)
+                        <span className="phi-col-sort-btn" title="Unique ID for this occurrence">
+                          ID
                         </span>
                         <div
                           className="phi-col-resize-handle"
@@ -968,7 +997,7 @@ export function PHIEditorEnhancer({
                           onClick={() => handleSort('type')}
                           title="Sort by type"
                         >
-                          Type & Location
+                          Type
                           {sortConfig.key === 'type' && (
                             <ArrowUpDown className="w-3 h-3 ml-1" />
                           )}
@@ -1075,19 +1104,14 @@ export function PHIEditorEnhancer({
                             )}
                           </div>
                         </td>
+                        <td className="phi-col-line" role="gridcell">
+                          {item.lineNumber}
+                        </td>
                         <td className="phi-col-id" role="gridcell">
-                          <div className="phi-id-display">
-                            <div className="phi-unique-id" title="Unique ID for this occurrence">
-                              {item.id}
-                            </div>
-                            <div className="phi-content-id" title="Content ID (shared across occurrences)">
-                              {item.contentId}
-                            </div>
-                          </div>
+                          {item.id}
                         </td>
                         <td className="phi-col-type" role="gridcell">
-                          <div className="phi-type-label">{item.type}</div>
-                          <div className="phi-location">Line {item.lineNumber}</div>
+                          {item.type}
                         </td>
                         <td className="phi-col-found" role="gridcell" title="Original detected PHI (immutable)">
                           <code>{item.value}</code>
