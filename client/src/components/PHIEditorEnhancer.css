@@ -387,6 +387,7 @@
 /* Static Column Widths (non-resizable) */
 .phi-col-number {
   width: 20px;
+  padding: 12px 4px !important; /* Reduced horizontal padding for compact column */
   text-align: center;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
@@ -412,6 +413,7 @@
 
 .phi-col-line {
   width: 20px;
+  padding: 12px 4px !important; /* Reduced horizontal padding for compact column */
   text-align: right;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
