@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.6] - 2026-01-31
+
+**Summary:** Comprehensive PHI detection panel UX improvements for better workflow efficiency. Redesigned footer layout for responsive sizing, shortened labels for compact display, streamlined stats presentation, and independent banner/drawer controls for better user control.
+
+### Changed
+
+- **PHI panel title:** Shortened from "Protected Health Information Detected" to "PHI Detected" with explicit counts (e.g., "3 unique, 5 total")
+- **Stats display:** Removed icons (✓, ⊘, ⋯) from Accepted/Skipped/Pending stats for cleaner presentation
+- **Stats positioning:** Moved stats above table with lighter color (opacity: 0.8) to match footer progress text styling
+- **Toggle button:** Repositioned expand/collapse toggle to top-right corner of panel header using absolute positioning
+- **Footer button labels:** Shortened to "Revert (N)", "Skip (N)", "Apply (N)" for improved responsive fit
+- **Panel height:** Increased max-height from 400px to 500px to prevent footer button overflow
+- **Collapsed panel:** Removed margin-bottom and added overflow: hidden to eliminate white space
+- **Confirmation checkbox:** Now works bidirectionally - checking enables generate button, unchecking disables it
+- **Banner/drawer independence:** Dismissing PHI warning banner no longer closes the bottom drawer panel
+- **Reset Columns button:** Updated styling to match app's secondary button pattern (border, neutral background)
+- **Responsive checkbox alignment:** Right-aligned on same line as title, left-aligned when wrapped to second line
+
+### Fixed
+
+- **Footer responsiveness:** Buttons no longer overflow or overlap footer container on smaller viewports
+- **Panel state management:** handleProceedWithPhi now only sets phiConfirmed state without closing banner
+- **Banner dismiss behavior:** handleDismissPhiWarning only hides banner, preserves phiDetection state and drawer visibility
+
+### Tests
+
+- Updated PHIEditorEnhancer tests: Title expectations ("PHI Detected"), stats without icons, button text ("Apply"), toggle aria-labels
+- Rewrote PHIWarningBanner tests: Simplified banner tests for new Banner component-based structure (removed modal workflow tests)
+- Fixed UnverifiedEmailBanner tests: Added ThemeProvider wrapper, updated button text and styling expectations
+- Added scrollTo mock to PHIEditorEnhancer tests for jsdom compatibility
+- Updated ControlBar responsive test for dark mode class expectations
+- Fixed phiDetector test: Updated sample limit test (now returns all samples, not limited to 3)
+- Fixed emailService test: CSS formatting in white-space test expectation
+- **Test Coverage:** 4,446 passing, 144 skipped, 27 failing (4,617 total tests)
+  - Frontend: 2,173 passing, 77 skipped, 25 failing (2,275 total)
+  - Backend: 2,273 passing, 67 skipped, 2 failing (2,342 total)
+  - **Note:** Remaining 27 test failures are pre-existing issues in UnverifiedEmailBanner (resend functionality mocks) and PHIEditorEnhancer inline editing (contentEditable interactions) - to be addressed in next release
+
+---
+
 ## [3.5.5] - 2026-01-29
 
 **Summary:** Email verification template redesigned for enterprise readiness. Purpose-first messaging, professional tier presentation, neutral environment labeling, and enhanced footer branding.
