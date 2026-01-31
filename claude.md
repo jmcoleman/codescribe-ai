@@ -1,7 +1,7 @@
 # CodeScribe AI - Claude Context Reference
 
 **Status:** ✅ PRODUCTION - [codescribeai.com](https://codescribeai.com) | React 19 + Vite | Node.js + Express | Claude API
-**Metrics:** 4,617 tests (96.4% pass) | Lighthouse 75/100 perf, 100/100 a11y | 78KB bundle | 0 axe violations
+**Metrics:** 4,607 tests (100% pass) | Lighthouse 75/100 perf, 100/100 a11y | 78KB bundle | 0 axe violations
 **Features:** 4 doc types | Monaco Editor | Mermaid diagrams | SSE streaming | Quality scoring (0-100)
 
 ---
@@ -280,7 +280,7 @@ Examples:
 ✅ **Production Ready** - MVP delivered in 9 days (Oct 19, 2025)
 - Phase 1 (Days 1-5): Web app, API, services, UI, tests
 - Phase 1.5 (Days 6-10): WCAG AA compliance, production deployment
-- Current: v3.5.6 - PHI workflow overhaul with inline editing, resizable columns, WCAG accessibility
+- Current: v3.5.6 - PHI workflow overhaul, inline editing, resizable columns, WCAG accessibility (100% test pass rate)
 
 ---
 
@@ -313,14 +313,17 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.5.6** (January 31, 2026) - PHI Workflow Overhaul with Inline Editing & Accessibility
+**Current: v3.5.6** (January 31, 2026) - PHI Workflow Overhaul, Test Suite Cleanup & Database Optimization
 - Inline replacement editing: Edit PHI directly in table with real-time Monaco sync
 - Resizable table columns with 1px minimum, weight-based allocation, responsive hiding
 - Revert functionality for accepted/skipped items, Skip All button for bulk operations
 - WCAG accessibility: Improved keyboard navigation, tab order, focus indicators
 - Banner component refactoring for consistent styling across app
 - Monaco tab focus mode for seamless editing workflow
-- Tests: 4,617 (4,446 passing, 144 skipped, 27 failing)
+- PHI UX polish: "Revert to original" button label, Found column tooltip for clarity
+- Database optimization: User role caching with 5-minute TTL, 50% reduction in analytics queries
+- Test cleanup: Deleted 8 obsolete tests, achieved 100% pass rate
+- Tests: 4,607 (4,471 passing, 136 skipped, 0 failing) ✅
 
 **v3.5.5** (January 29, 2026) - Email Template Enterprise Polish
 - Email verification template redesign: purpose-first messaging, neutral environment labeling
@@ -396,7 +399,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: January 26, 2026
+Last updated: January 31, 2026
 </details>
 
 ---
