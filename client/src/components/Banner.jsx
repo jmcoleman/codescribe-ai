@@ -26,6 +26,7 @@ import { X } from 'lucide-react';
  * @param {Function} props.onDismiss - Callback when banner is dismissed
  * @param {React.ReactNode} props.actions - Optional action buttons (rendered before dismiss button)
  * @param {string} props.ariaLive - ARIA live region type: 'polite' | 'assertive' (default: 'polite')
+ * @param {boolean} props.alignCenter - If true, vertically center all items (for single-line banners). Default: false (items-start)
  * @returns {JSX.Element}
  */
 export function Banner({
@@ -36,7 +37,8 @@ export function Banner({
   children,
   onDismiss,
   actions = null,
-  ariaLive = 'polite'
+  ariaLive = 'polite',
+  alignCenter = false
 }) {
   return (
     <div
@@ -44,11 +46,11 @@ export function Banner({
       role="alert"
       aria-live={ariaLive}
     >
-      <div className="flex items-start gap-3 p-4">
+      <div className={`flex ${alignCenter ? 'items-center' : 'items-start'} gap-3 p-4`}>
         {/* Icon - consistent display, no background circle */}
         {Icon && (
           <Icon
-            className={`h-5 w-5 mt-0.5 flex-shrink-0 ${iconColor}`}
+            className={`h-5 w-5 ${alignCenter ? '' : 'mt-0.5'} flex-shrink-0 ${iconColor}`}
             aria-hidden="true"
           />
         )}

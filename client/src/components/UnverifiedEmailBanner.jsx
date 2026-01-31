@@ -99,6 +99,7 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
       borderColor="border-indigo-500 dark:border-indigo-400"
       onDismiss={handleDismiss}
       ariaLive="polite"
+      alignCenter={true}
       actions={
         <button
           onClick={handleResend}
