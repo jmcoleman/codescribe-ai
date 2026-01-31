@@ -132,7 +132,15 @@ export function PHIEditorEnhancer({
 
     if (stored) {
       try {
-        return { ...defaults, ...JSON.parse(stored) };
+        const parsed = JSON.parse(stored);
+        // Validate stored widths - ensure important columns aren't too small
+        const validated = { ...defaults, ...parsed };
+
+        // Ensure Found and Replacement columns have reasonable minimums
+        if (validated.found < 100) validated.found = 400;
+        if (validated.replacement < 100) validated.replacement = 350;
+
+        return validated;
       } catch (e) {
         return defaults;
       }
