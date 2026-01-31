@@ -430,14 +430,12 @@
 }
 
 .phi-col-found {
-  max-width: 0; /* Required for text-overflow: ellipsis to work */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .phi-col-replacement {
-  max-width: 0; /* Required for text-overflow: ellipsis to work */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

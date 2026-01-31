@@ -32,6 +32,7 @@ export const STORAGE_KEYS = {
   THEME_PREFERENCE: 'cs_ui_theme',
   LAYOUT_MODE: 'cs_ui_layout', // 'split' | 'code' | 'doc'
   // Note: Table column sizes use cs_ui_tbl_cols_{tableId} via useTableColumnSizing hook
+  PHI_TABLE_COLUMNS: 'cs_ui_tbl_cols_phi', // PHI detection table column widths
   HISTORY_COLUMN_VISIBILITY: 'cs_ui_hist_cols', // History table column visibility state
   VIEW_MODE_CODE: 'cs_ui_view_code', // 'raw' | 'rendered' for CodePanel markdown preview
   VIEW_MODE_FILE_PREVIEW: 'cs_ui_view_file', // 'raw' | 'rendered' for FilePreview markdown preview

@@ -14,6 +14,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { AlertTriangle, Check, X, ChevronDown, ChevronUp, ArrowLeft, ArrowUpDown, GripVertical, Undo } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { STORAGE_KEYS } from '../constants/storage';
 import './PHIEditorEnhancer.css';
 
 /**
@@ -119,7 +120,7 @@ export function PHIEditorEnhancer({
   const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
   // Load column widths from localStorage or use defaults
   const getInitialColumnWidths = () => {
-    const stored = localStorage.getItem('phiTableColumnWidths');
+    const stored = localStorage.getItem(STORAGE_KEYS.PHI_TABLE_COLUMNS);
     const defaults = {
       status: 105,
       line: 40,
@@ -152,7 +153,7 @@ export function PHIEditorEnhancer({
 
   // Save column widths to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('phiTableColumnWidths', JSON.stringify(columnWidths));
+    localStorage.setItem(STORAGE_KEYS.PHI_TABLE_COLUMNS, JSON.stringify(columnWidths));
   }, [columnWidths]);
 
   const decorationsRef = useRef([]);
@@ -679,18 +680,9 @@ export function PHIEditorEnhancer({
   }, [phiItems, sortConfig, reviewState, customReplacements]);
 
   // Column-specific minimum widths (all resizable columns except #)
-  // Set very small minimums to give users maximum control
+  // Set to 10px to allow maximum user control - essentially no minimum
   const getMinColumnWidth = useCallback((column) => {
-    const minimums = {
-      status: 30,      // Can shrink very small
-      line: 20,        // Can shrink very small
-      id: 30,          // Can shrink very small
-      type: 30,        // Can shrink very small
-      found: 30,       // Can shrink very small
-      replacement: 30, // Can shrink very small
-      action: 30       // Can shrink very small
-    };
-    return minimums[column] || 30;
+    return 10; // Allow columns to shrink to nearly nothing
   }, []);
 
   // Handle column resize
