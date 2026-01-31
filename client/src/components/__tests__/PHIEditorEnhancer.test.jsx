@@ -214,17 +214,17 @@ describe('PHIEditorEnhancer', () => {
       />
     );
 
-    // Accept first item
-    const acceptButtons = container.querySelectorAll('.phi-btn-accept');
-    fireEvent.click(acceptButtons[0]);
+    // Apply first item using the correct button class
+    const applyButtons = container.querySelectorAll('.phi-btn-apply-item');
+    fireEvent.click(applyButtons[0]);
 
     await waitFor(() => {
       expect(screen.getByText('1 Accepted')).toBeInTheDocument();
     });
 
-    // Click Apply button (pendingCount = 1 since we accepted one of two items)
-    const applyButton = screen.getByText(/Apply \(1\)/i);
-    fireEvent.click(applyButton);
+    // Click Apply All button (pendingCount = 1 since we applied one of two items)
+    const applyAllButton = screen.getByText(/Apply \(1\)/i);
+    fireEvent.click(applyAllButton);
 
     await waitFor(() => {
       expect(onPhiResolved).toHaveBeenCalled();

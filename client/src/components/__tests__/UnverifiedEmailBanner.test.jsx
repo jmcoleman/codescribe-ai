@@ -157,7 +157,7 @@ describe('UnverifiedEmailBanner', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
       });
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       // Should show loading state
@@ -188,7 +188,7 @@ describe('UnverifiedEmailBanner', () => {
 
       // Button should return to normal state
       await waitFor(() => {
-        expect(resendButton).toHaveTextContent(/resend email/i);
+        expect(resendButton).toHaveTextContent(/resend verification email/i);
       });
     });
 
@@ -205,7 +205,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       // Should not show success toast
@@ -215,7 +215,7 @@ describe('UnverifiedEmailBanner', () => {
 
       // Button should return to normal state
       await waitFor(() => {
-        expect(resendButton).toHaveTextContent(/resend email/i);
+        expect(resendButton).toHaveTextContent(/resend verification email/i);
       });
     });
 
@@ -233,7 +233,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       await waitFor(() => {
@@ -249,7 +249,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       await waitFor(() => {
@@ -264,12 +264,12 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       // Should not crash and button should return to normal
       await waitFor(() => {
-        expect(resendButton).toHaveTextContent(/resend email/i);
+        expect(resendButton).toHaveTextContent(/resend verification email/i);
         expect(resendButton).not.toBeDisabled();
       });
     });
@@ -303,7 +303,7 @@ describe('UnverifiedEmailBanner', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
       });
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       await waitFor(() => {
@@ -327,7 +327,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       // Should still call API (backend will reject)
@@ -350,7 +350,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
 
       // Click multiple times rapidly
       fireEvent.click(resendButton);
@@ -419,7 +419,7 @@ describe('UnverifiedEmailBanner', () => {
     it('should have accessible button labels', () => {
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       const dismissButton = screen.getByLabelText(/dismiss/i);
 
       expect(resendButton).toBeInTheDocument();
@@ -429,7 +429,7 @@ describe('UnverifiedEmailBanner', () => {
     it('should have keyboard accessible buttons', () => {
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       const dismissButton = screen.getByLabelText(/dismiss/i);
 
       expect(resendButton).not.toHaveAttribute('tabindex', '-1');
@@ -443,7 +443,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       await waitFor(() => {
@@ -535,7 +535,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       // Banner should still be visible after failed resend
@@ -558,7 +558,7 @@ describe('UnverifiedEmailBanner', () => {
 
       const { unmount } = renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       // Unmount while request is in flight
@@ -586,7 +586,7 @@ describe('UnverifiedEmailBanner', () => {
       expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
 
       // Step 2: Resend email
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       await waitFor(() => {
@@ -646,7 +646,7 @@ describe('UnverifiedEmailBanner', () => {
 
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       await waitFor(() => {
@@ -684,11 +684,11 @@ describe('UnverifiedEmailBanner', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
       });
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       fireEvent.click(resendButton);
 
       await waitFor(() => {
-        expect(resendButton).toHaveTextContent(/resend email/i);
+        expect(resendButton).toHaveTextContent(/resend verification email/i);
       });
 
       expect(toastSuccess).not.toHaveBeenCalled();

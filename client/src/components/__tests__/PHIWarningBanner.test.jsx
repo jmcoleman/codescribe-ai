@@ -83,7 +83,7 @@ describe('PHIWarningBanner', () => {
       );
 
       expect(screen.getByText(/Protected Health Information Detected/i)).toBeInTheDocument();
-      expect(screen.getByText(/High/i)).toBeInTheDocument();
+      expect(screen.getByText(/Detection Confidence: High/i)).toBeInTheDocument();
     });
 
     it('should render with medium confidence PHI detection', () => {
@@ -137,7 +137,7 @@ describe('PHIWarningBanner', () => {
       );
 
       expect(screen.getByText(/Possible Protected Health Information Detected/i)).toBeInTheDocument();
-      expect(screen.getByText(/Low/i)).toBeInTheDocument();
+      expect(screen.getByText(/Detection Confidence: Low/i)).toBeInTheDocument();
     });
   });
 

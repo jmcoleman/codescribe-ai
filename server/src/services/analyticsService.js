@@ -7,6 +7,49 @@
 import { sql } from '@vercel/postgres';
 
 /**
+ * In-memory cache for user role lookups to reduce database queries
+ * Cache TTL: 5 minutes (300000ms)
+ */
+const userRoleCache = new Map();
+const USER_ROLE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get user role with caching to reduce database load
+ * @param {number} userId - User ID
+ * @returns {Promise<Object>} User role data
+ */
+async function getCachedUserRole(userId) {
+  if (!userId) return null;
+
+  // Check cache first
+  const cached = userRoleCache.get(userId);
+  if (cached && (Date.now() - cached.timestamp) < USER_ROLE_CACHE_TTL) {
+    return cached.data;
+  }
+
+  // Fetch from database
+  try {
+    const userResult = await sql`
+      SELECT role, viewing_as_tier FROM users WHERE id = ${userId}
+    `;
+    if (userResult.rows.length > 0) {
+      const userData = userResult.rows[0];
+      // Cache the result
+      userRoleCache.set(userId, {
+        data: userData,
+        timestamp: Date.now()
+      });
+      return userData;
+    }
+    return null;
+  } catch (error) {
+    // Don't fail event recording if user lookup fails
+    console.error('[Analytics] User lookup failed:', error.message);
+    return null;
+  }
+}
+
+/**
  * Event name to category mapping
  */
 const EVENT_CATEGORIES = {
@@ -113,33 +156,26 @@ export const analyticsService = {
     const category = EVENT_CATEGORIES[eventName];
     const { sessionId, userId, ipAddress, isInternal = false } = context;
 
-    // Detect internal users by checking the user's role in the database
+    // Detect internal users by checking the user's role in the database (with caching)
     // This ensures admin/support users are always excluded from business metrics
     let isInternalUser = isInternal;
     let userRole = null;
     let viewingAsTier = null;
 
     if (userId) {
-      try {
-        const userResult = await sql`
-          SELECT role, viewing_as_tier FROM users WHERE id = ${userId}
-        `;
-        if (userResult.rows.length > 0) {
-          const { role, viewing_as_tier } = userResult.rows[0];
-          // Check if user has admin/support role
-          const isAdminRole = ['admin', 'support', 'super_admin'].includes(role);
-          if (isAdminRole) {
-            userRole = role; // Capture specific role (admin, support, super_admin)
-          }
-          if (viewing_as_tier) {
-            viewingAsTier = viewing_as_tier; // Capture which tier they're viewing as (for audit/debugging)
-          }
-          // Mark as internal if admin/support role (only admins can use tier override)
-          isInternalUser = isAdminRole;
+      const userData = await getCachedUserRole(userId);
+      if (userData) {
+        const { role, viewing_as_tier } = userData;
+        // Check if user has admin/support role
+        const isAdminRole = ['admin', 'support', 'super_admin'].includes(role);
+        if (isAdminRole) {
+          userRole = role; // Capture specific role (admin, support, super_admin)
         }
-      } catch (error) {
-        // Don't fail event recording if user lookup fails
-        console.error('[Analytics] User lookup failed:', error.message);
+        if (viewing_as_tier) {
+          viewingAsTier = viewing_as_tier; // Capture which tier they're viewing as (for audit/debugging)
+        }
+        // Mark as internal if admin/support role (only admins can use tier override)
+        isInternalUser = isAdminRole;
       }
     }
 
@@ -189,13 +225,27 @@ export const analyticsService = {
       };
     } catch (error) {
       // Log error for monitoring but don't rethrow (analytics shouldn't break app)
+      const errorType = error.message?.includes('Too many database connection attempts')
+        ? 'db_connection_pool_exhausted'
+        : 'db_error';
+
       console.error(JSON.stringify({
-        type: 'analytics_error',
-        event: eventName,
-        error: error.message,
+        type: 'analytics_tracking_error',
+        error_type: errorType,
+        error_message: error.message,
+        event_name: eventName,
+        ip_address: ipAddress,
         timestamp: new Date().toISOString(),
       }));
-      throw error;
+
+      // Don't rethrow - gracefully degrade analytics instead of breaking app
+      return {
+        id: null,
+        eventName,
+        category,
+        createdAt: new Date().toISOString(),
+        error: errorType,
+      };
     }
   },
 
