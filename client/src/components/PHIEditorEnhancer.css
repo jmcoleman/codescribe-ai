@@ -406,14 +406,14 @@
 }
 
 .phi-col-line {
-  min-width: 60px;
+  min-width: 55px;
   text-align: right;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
 }
 
 .phi-col-id {
-  min-width: 180px;
+  min-width: 130px;
   max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

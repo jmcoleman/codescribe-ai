@@ -118,10 +118,10 @@ export function PHIEditorEnhancer({
   const [confirmed, setConfirmed] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
   const [columnWidths, setColumnWidths] = useState({
-    number: 50, // Row number for easy reference
+    number: 40, // Row number for easy reference
     status: 120,
-    line: 80, // Line number column
-    id: 200, // Unique ID for each occurrence
+    line: 55, // Line number column
+    id: 130, // Unique ID for each occurrence (e.g., "phi-12345-0")
     type: 180,
     found: 400, // Large width to minimize ellipsis - immutable audit record
     replacement: 350, // Large width to show full replacement values - editable
