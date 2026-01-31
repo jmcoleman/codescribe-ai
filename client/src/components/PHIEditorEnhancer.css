@@ -116,7 +116,6 @@
 .phi-panel-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 12px 16px;
   user-select: none;
@@ -180,6 +179,7 @@
   cursor: pointer;
   flex-shrink: 1;
   min-width: 0;
+  margin-left: auto;
 }
 
 .phi-header-confirmation span {
@@ -260,8 +260,10 @@
   outline: none;
 }
 
-.phi-items-table:focus {
+.phi-items-table:focus,
+.phi-items-table:focus-visible {
   outline: none;
+  box-shadow: none;
 }
 
 .phi-review-panel.light .phi-items-table {
@@ -285,12 +287,12 @@
 }
 
 .phi-review-panel.light .phi-items-table thead {
-  background: #f1f5f9; /* slate-100 */
+  background: #f8fafc; /* slate-50 - matches BaseTable */
   box-shadow: 0 1px 0 0 #e2e8f0; /* slate-200 - adds bottom border */
 }
 
 .phi-review-panel.dark .phi-items-table thead {
-  background: #334155; /* slate-700 */
+  background: rgba(51, 65, 85, 0.5); /* slate-700/50 - matches BaseTable */
   box-shadow: 0 1px 0 0 #475569; /* slate-600 - adds bottom border */
 }
 
@@ -299,20 +301,18 @@
 }
 
 .phi-items-table th {
-  padding: 8px;
+  padding: 12px 16px;
   text-align: left;
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 500;
+  font-size: 14px;
 }
 
 .phi-review-panel.light .phi-items-table th {
-  color: #64748b; /* slate-500 */
+  color: #64748b; /* slate-500 - matches BaseTable */
 }
 
 .phi-review-panel.dark .phi-items-table th {
-  color: #94a3b8; /* slate-400 */
+  color: #94a3b8; /* slate-400 - matches BaseTable */
 }
 
 /* Column Headers - Resizable and Sortable */
@@ -392,7 +392,7 @@
 }
 
 .phi-status-text {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -402,10 +402,18 @@
 
 .phi-col-found {
   min-width: 150px;
+  max-width: 0; /* Required for text-overflow: ellipsis to work */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .phi-col-replacement {
   min-width: 150px;
+  max-width: 0; /* Required for text-overflow: ellipsis to work */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .phi-col-action {
@@ -427,11 +435,11 @@
 }
 
 .phi-review-panel.light .phi-items-table tbody tr:hover {
-  background: #f1f5f9; /* slate-100 */
+  background: rgba(217, 119, 6, 0.02); /* amber-600 at 2% - brand color, very subtle hover */
 }
 
 .phi-review-panel.dark .phi-items-table tbody tr:hover {
-  background: #334155; /* slate-700 */
+  background: rgba(251, 191, 36, 0.03); /* amber-400 at 3% - brand color, very subtle hover */
 }
 
 .phi-items-table tbody tr.current {
@@ -439,15 +447,16 @@
 }
 
 .phi-review-panel.light .phi-items-table tbody tr.current {
-  background: #faf5ff; /* purple-50 - subtle, aligns with brand */
+  background: rgba(217, 119, 6, 0.07); /* amber-600 at 7% - brand color, lighter but distinct from hover at 2% */
 }
 
 .phi-review-panel.dark .phi-items-table tbody tr.current {
-  background: rgba(168, 85, 247, 0.15); /* purple-500 with 15% opacity - subtle, aligns with brand */
+  background: rgba(251, 191, 36, 0.08); /* amber-400 at 8% - brand color, lighter but distinct from hover at 3% */
 }
 
 .phi-items-table td {
-  padding: 8px;
+  padding: 12px 16px; /* px-4 py-3 - matches BaseTable */
+  vertical-align: top;
 }
 
 .phi-type-label {
@@ -464,20 +473,49 @@
 .phi-col-replacement code {
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 13px;
   font-family: 'JetBrains Mono', monospace;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.phi-review-panel.light .phi-col-found code,
-.phi-review-panel.light .phi-col-replacement code {
-  background: #e2e8f0; /* slate-200 */
-  color: #334155; /* slate-700 */
+/* Editable replacement field */
+.phi-col-replacement code {
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
 }
 
-.phi-review-panel.dark .phi-col-found code,
-.phi-review-panel.dark .phi-col-replacement code {
+.phi-review-panel.light .phi-col-replacement code:hover {
+  background: #f1f5f9; /* slate-100 */
+  border-color: #cbd5e1; /* slate-300 */
+}
+
+.phi-review-panel.dark .phi-col-replacement code:hover {
   background: #334155; /* slate-700 */
-  color: #e2e8f0; /* slate-200 */
+  border-color: #475569; /* slate-600 */
+}
+
+.phi-col-replacement code:focus {
+  cursor: text;
+  outline: 2px solid #9333ea; /* purple-600 */
+  outline-offset: 2px;
+  background: white;
+  border-color: #9333ea;
+}
+
+.phi-review-panel.dark .phi-col-replacement code:focus {
+  background: #1e293b; /* slate-800 */
+  outline-color: #c084fc; /* purple-400 */
+  border-color: #c084fc;
+}
+
+/* Found column is immutable */
+.phi-col-found code {
+  cursor: default;
+  user-select: text;
 }
 
 .phi-pending-indicator {

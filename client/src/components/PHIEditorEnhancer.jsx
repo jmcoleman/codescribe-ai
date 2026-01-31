@@ -84,17 +84,18 @@ export function PHIEditorEnhancer({
   const [phiItems, setPhiItems] = useState([]);
   const [reviewState, setReviewState] = useState({});
   const [customReplacements, setCustomReplacements] = useState({});
-  const [originalValues, setOriginalValues] = useState({}); // Store original PHI values for revert
+  const [originalValues, setOriginalValues] = useState({}); // Store original PHI values for revert (immutable "Found" column)
   const [currentItemId, setCurrentItemId] = useState(null);
   const [panelExpanded, setPanelExpanded] = useState(true);
   const [showBackToFirst, setShowBackToFirst] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [confirmed, setConfirmed] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
   const [columnWidths, setColumnWidths] = useState({
     status: 120,
     type: 180,
-    found: 400, // Large width to minimize ellipsis
-    replacement: 350, // Large width to show full replacement values
+    found: 400, // Large width to minimize ellipsis - immutable audit record
+    replacement: 350, // Large width to show full replacement values - editable
     action: 120
   });
 
@@ -257,6 +258,40 @@ export function PHIEditorEnhancer({
     };
   }, [monacoInstance, phiItems]);
 
+  // Detect edits in Monaco and update replacement field
+  useEffect(() => {
+    if (!editorInstance || phiItems.length === 0) return;
+
+    const disposable = editorInstance.onDidChangeModelContent((e) => {
+      // Check if the edit affected any PHI positions
+      e.changes.forEach(change => {
+        const affectedItem = phiItems.find(item => {
+          return item.lineNumber >= change.range.startLineNumber &&
+                 item.lineNumber <= change.range.endLineNumber;
+        });
+
+        if (affectedItem && change.text) {
+          // User edited at a PHI location - update the replacement field
+          // This creates the two-way sync: Monaco edit → Table replacement
+          const newText = change.text.trim();
+          if (newText && newText !== affectedItem.value) {
+            // Update the replacement field to show what they changed it to
+            setCustomReplacements(prev => ({
+              ...prev,
+              [affectedItem.id]: newText
+            }));
+          }
+        }
+      });
+    });
+
+    return () => {
+      if (disposable) {
+        disposable.dispose();
+      }
+    };
+  }, [editorInstance, phiItems]);
+
   // Register code action provider for quick fixes
   useEffect(() => {
     if (!monacoInstance || !editorInstance || phiItems.length === 0) return;
@@ -328,11 +363,30 @@ export function PHIEditorEnhancer({
     };
   }, [monacoInstance, editorInstance, phiItems]);
 
+  // Handle replacement text edit in table - updates Monaco editor
+  const handleReplacementEdit = useCallback((itemId, newReplacement) => {
+    const item = phiItems.find(i => i.id === itemId);
+    if (!item || !editorInstance) return;
+
+    // Store the custom replacement
+    setCustomReplacements(prev => ({
+      ...prev,
+      [itemId]: newReplacement
+    }));
+
+    // If this item is already accepted, update the code in Monaco immediately
+    if (reviewState[itemId] === 'accepted') {
+      const oldReplacement = customReplacements[itemId] || item.suggestedReplacement;
+      const newCode = code.replaceAll(oldReplacement, newReplacement);
+      onCodeChange(newCode);
+    }
+  }, [phiItems, reviewState, customReplacements, code, onCodeChange, editorInstance]);
+
   // Handle accept PHI - apply immediately
   const handleAcceptPHI = useCallback((itemId) => {
     setReviewState(prev => ({ ...prev, [itemId]: 'accepted' }));
 
-    // Store original value for revert
+    // Store original value for revert (immutable "Found" column)
     const item = phiItems.find(i => i.id === itemId);
     if (item) {
       setOriginalValues(prev => ({ ...prev, [itemId]: item.value }));
@@ -939,11 +993,55 @@ export function PHIEditorEnhancer({
                           <div className="phi-type-label">{item.type}</div>
                           <div className="phi-location">Line {item.lineNumber}</div>
                         </td>
-                        <td className="phi-col-found" role="gridcell">
-                          <code>{item.value.length > 20 ? item.value.substring(0, 20) + '…' : item.value}</code>
+                        <td className="phi-col-found" role="gridcell" title="Original detected PHI (immutable)">
+                          <code>{item.value}</code>
                         </td>
-                        <td className="phi-col-replacement" role="gridcell">
-                          <code className="phi-replacement-preview">
+                        <td
+                          className="phi-col-replacement"
+                          role="gridcell"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <code
+                            className="phi-replacement-preview"
+                            contentEditable={true}
+                            suppressContentEditableWarning={true}
+                            onFocus={(e) => {
+                              setEditingItemId(item.id);
+                              // Select all text on focus
+                              const range = document.createRange();
+                              range.selectNodeContents(e.target);
+                              const sel = window.getSelection();
+                              sel.removeAllRanges();
+                              sel.addRange(range);
+                            }}
+                            onBlur={(e) => {
+                              const newValue = e.target.textContent.trim();
+                              if (newValue && newValue !== (customReplacements[item.id] || item.suggestedReplacement)) {
+                                handleReplacementEdit(item.id, newValue);
+                              }
+                              setEditingItemId(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.target.blur(); // Trigger onBlur to save
+                              }
+                              if (e.key === 'Escape') {
+                                e.preventDefault();
+                                // Revert to original value
+                                e.target.textContent = customReplacements[item.id] || item.suggestedReplacement;
+                                e.target.blur();
+                              }
+                              // Stop propagation to prevent table navigation
+                              e.stopPropagation();
+                            }}
+                            title="Click to edit replacement value"
+                            style={{
+                              cursor: editingItemId === item.id ? 'text' : 'pointer',
+                              outline: editingItemId === item.id ? '2px solid rgb(147, 51, 234)' : 'none',
+                              outlineOffset: '2px'
+                            }}
+                          >
                             {customReplacements[item.id] || item.suggestedReplacement}
                           </code>
                         </td>
