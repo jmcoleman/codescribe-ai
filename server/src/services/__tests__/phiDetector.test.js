@@ -138,7 +138,7 @@ describe('PHI Detector Service', () => {
       expect(result.findings.ssn.count).toBe(1); // Same SSN repeated
     });
 
-    it('should limit samples to first 3', () => {
+    it('should return all unique samples (no limit)', () => {
       const code = `
         const ssn1 = "111-11-1111";
         const ssn2 = "222-22-2222";
@@ -148,7 +148,8 @@ describe('PHI Detector Service', () => {
       `;
       const result = detectPHI(code);
 
-      expect(result.findings.ssn.samples).toHaveLength(3);
+      // Should return all 5 unique samples (not limited to 3)
+      expect(result.findings.ssn.samples).toHaveLength(5);
     });
 
     it('should handle empty/null input', () => {

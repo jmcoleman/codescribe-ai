@@ -9,9 +9,10 @@ import userEvent from '@testing-library/user-event';
 import { PHIEditorEnhancer } from '../PHIEditorEnhancer';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 
-// Mock scrollIntoView (not available in jsdom)
+// Mock scrollIntoView and scrollTo (not available in jsdom)
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
+  Element.prototype.scrollTo = vi.fn();
 });
 
 // Mock Monaco editor

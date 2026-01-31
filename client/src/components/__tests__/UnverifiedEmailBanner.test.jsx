@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import UnverifiedEmailBanner from '../UnverifiedEmailBanner';
 import { toastSuccess, toastError } from '../../utils/toast';
 import { AuthProvider } from '../../contexts/AuthContext';
+import { ThemeProvider } from '../../contexts/ThemeContext';
 
 // Mock toast utilities
 vi.mock('../../utils/toast', () => ({
@@ -45,9 +46,11 @@ describe('UnverifiedEmailBanner', () => {
 
   const renderWithAuth = (component) => {
     return render(
-      <AuthProvider>
-        {component}
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          {component}
+        </AuthProvider>
+      </ThemeProvider>
     );
   };
 
@@ -102,7 +105,7 @@ describe('UnverifiedEmailBanner', () => {
     it('should display resend button', () => {
       renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i });
+      const resendButton = screen.getByRole('button', { name: /resend verification email/i });
       expect(resendButton).toBeInTheDocument();
     });
 
@@ -116,8 +119,9 @@ describe('UnverifiedEmailBanner', () => {
     it('should have brand gradient styling (indigo to purple)', () => {
       const { container } = renderWithAuth(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const banner = container.firstChild;
-      expect(banner).toHaveClass('bg-gradient-to-r', 'from-indigo-50', 'to-purple-50');
+      // Uses Banner component with indigo border
+      const banner = container.querySelector('.border-indigo-500');
+      expect(banner).toBeInTheDocument();
     });
   });
 

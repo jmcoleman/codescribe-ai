@@ -1116,7 +1116,7 @@ describe('Email Service', () => {
       });
 
       const callArgs = mockSendEmail.mock.calls[0][0];
-      expect(callArgs.html).toContain('white-space: pre-wrap');
+      expect(callArgs.html).toContain('white-space:pre-wrap');
       expect(callArgs.html).toContain('Step 1: Do this\nStep 2: Do that\nStep 3: Done');
     });
 

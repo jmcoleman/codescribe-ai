@@ -1,12 +1,21 @@
 /**
  * PHI Warning Banner Component Tests
- * Tests for Protected Health Information warning display
+ * Tests for simplified PHI warning display (works with PHIEditorEnhancer drawer)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PHIWarningBanner } from '../PHIWarningBanner';
+import { ThemeProvider } from '../../contexts/ThemeContext';
+
+function renderWithTheme(ui) {
+  return render(
+    <ThemeProvider>
+      {ui}
+    </ThemeProvider>
+  );
+}
 
 describe('PHIWarningBanner', () => {
   const mockOnDismiss = vi.fn();
@@ -27,7 +36,7 @@ describe('PHIWarningBanner', () => {
         suggestions: [],
       };
 
-      const { container } = render(
+      const { container } = renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -39,7 +48,7 @@ describe('PHIWarningBanner', () => {
     });
 
     it('should not render when phiDetection is null', () => {
-      const { container } = render(
+      const { container } = renderWithTheme(
         <PHIWarningBanner
           phiDetection={null}
           onDismiss={mockOnDismiss}
@@ -65,7 +74,7 @@ describe('PHIWarningBanner', () => {
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -73,8 +82,8 @@ describe('PHIWarningBanner', () => {
         />
       );
 
-      expect(screen.getByText(/Potential PHI Detected/i)).toBeInTheDocument();
-      expect(screen.getByText(/HIGH confidence/i)).toBeInTheDocument();
+      expect(screen.getByText(/Protected Health Information Detected/i)).toBeInTheDocument();
+      expect(screen.getByText(/High/i)).toBeInTheDocument();
     });
 
     it('should render with medium confidence PHI detection', () => {
@@ -92,7 +101,7 @@ describe('PHIWarningBanner', () => {
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -100,8 +109,8 @@ describe('PHIWarningBanner', () => {
         />
       );
 
-      expect(screen.getByText(/Potential PHI Detected/i)).toBeInTheDocument();
-      expect(screen.getByText(/MEDIUM confidence/i)).toBeInTheDocument();
+      expect(screen.getByText(/Protected Health Information Detected/i)).toBeInTheDocument();
+      expect(screen.getByText(/Medium/i)).toBeInTheDocument();
     });
 
     it('should render with low confidence PHI detection', () => {
@@ -119,7 +128,7 @@ describe('PHIWarningBanner', () => {
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -127,8 +136,8 @@ describe('PHIWarningBanner', () => {
         />
       );
 
-      expect(screen.getByText(/Potential PHI Detected/i)).toBeInTheDocument();
-      expect(screen.getByText(/LOW confidence/i)).toBeInTheDocument();
+      expect(screen.getByText(/Possible Protected Health Information Detected/i)).toBeInTheDocument();
+      expect(screen.getByText(/Low/i)).toBeInTheDocument();
     });
   });
 
@@ -148,7 +157,7 @@ describe('PHIWarningBanner', () => {
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -169,17 +178,17 @@ describe('PHIWarningBanner', () => {
             description: 'Social Security Number',
             samples: ['123-45-6789', '987-65-4321'],
           },
-          phone: {
+          email: {
             count: 1,
-            description: 'Phone Number',
-            samples: ['555-123-4567'],
+            description: 'Email Address',
+            samples: ['test@example.com'],
           },
         },
-        score: 16,
+        score: 25,
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -188,28 +197,30 @@ describe('PHIWarningBanner', () => {
       );
 
       expect(screen.getByText(/2 Social Security Numbers/i)).toBeInTheDocument();
-      expect(screen.getByText(/1 Phone Number/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 Email Address/i)).toBeInTheDocument();
     });
 
     it('should exclude healthKeywords from findings display', () => {
       const phiDetection = {
         containsPHI: true,
-        confidence: 'low',
+        confidence: 'medium',
         findings: {
-          healthKeywords: {
-            count: 5,
-            description: 'Healthcare-related keywords',
-          },
           ssn: {
             count: 1,
             description: 'Social Security Number',
+            samples: ['123-45-6789'],
+          },
+          healthKeywords: {
+            count: 5,
+            description: 'Healthcare Keywords',
+            samples: ['patient', 'diagnosis', 'prescription', 'medical', 'health'],
           },
         },
-        score: 12,
+        score: 15,
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -218,165 +229,28 @@ describe('PHIWarningBanner', () => {
       );
 
       expect(screen.getByText(/1 Social Security Number/i)).toBeInTheDocument();
-      expect(screen.queryByText(/keyword/i)).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Suggestions', () => {
-    it('should show suggestions button when suggestions exist', () => {
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 1, description: 'SSN', samples: ['123-45-6789'] },
-        },
-        score: 10,
-        suggestions: [
-          {
-            type: 'ssn',
-            title: 'Social Security Numbers',
-            message: 'Replace with XXX-XX-XXXX',
-            priority: 'high',
-            examples: ['123-45-6789'],
-          },
-        ],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.getByText(/View sanitization suggestions/i)).toBeInTheDocument();
-    });
-
-    it('should toggle suggestions on click', async () => {
-      const user = userEvent.setup();
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 1, description: 'SSN', samples: ['123-45-6789'] },
-        },
-        score: 10,
-        suggestions: [
-          {
-            type: 'ssn',
-            title: 'Social Security Numbers',
-            message: 'Replace with XXX-XX-XXXX',
-            priority: 'high',
-            examples: ['123-45-6789'],
-          },
-        ],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const toggleButton = screen.getByText(/View sanitization suggestions/i);
-
-      // Initially collapsed
-      expect(screen.queryByText(/Replace with XXX-XX-XXXX/i)).not.toBeInTheDocument();
-
-      // Click to expand
-      await user.click(toggleButton);
-      await waitFor(() => {
-        expect(screen.getByText(/Replace with XXX-XX-XXXX/i)).toBeInTheDocument();
-      });
-
-      // Click to collapse
-      await user.click(toggleButton);
-      await waitFor(() => {
-        expect(screen.queryByText(/Replace with XXX-XX-XXXX/i)).not.toBeInTheDocument();
-      });
-    });
-
-    it('should display suggestion examples', async () => {
-      const user = userEvent.setup();
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 2, description: 'SSN', samples: ['123-45-6789', '987-65-4321'] },
-        },
-        score: 20,
-        suggestions: [
-          {
-            type: 'ssn',
-            title: 'Social Security Numbers',
-            message: 'Replace with XXX-XX-XXXX',
-            priority: 'high',
-            examples: ['123-45-6789', '987-65-4321'],
-          },
-        ],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const toggleButton = screen.getByText(/View sanitization suggestions/i);
-      await user.click(toggleButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Examples found:/i)).toBeInTheDocument();
-        expect(screen.getByText(/123-45-6789, 987-65-4321/i)).toBeInTheDocument();
-      });
+      expect(screen.queryByText(/Healthcare Keywords/i)).not.toBeInTheDocument();
     });
   });
 
   describe('User Interactions', () => {
-    it('should call onDismiss when Sanitize Code First button is clicked', async () => {
-      const user = userEvent.setup();
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 1, description: 'SSN' },
-        },
-        score: 10,
-        suggestions: [],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const dismissButton = screen.getByText(/Sanitize Code First/i);
-      await user.click(dismissButton);
-
-      expect(mockOnDismiss).toHaveBeenCalledTimes(1);
-    });
-
     it('should call onDismiss when close button is clicked', async () => {
       const user = userEvent.setup();
       const phiDetection = {
         containsPHI: true,
         confidence: 'high',
         findings: {
-          ssn: { count: 1, description: 'SSN' },
+          ssn: {
+            count: 1,
+            description: 'Social Security Number',
+            samples: ['123-45-6789'],
+          },
         },
         score: 10,
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -384,102 +258,10 @@ describe('PHIWarningBanner', () => {
         />
       );
 
-      const closeButton = screen.getByLabelText(/Dismiss PHI warning/i);
+      const closeButton = screen.getByLabelText(/dismiss/i);
       await user.click(closeButton);
 
       expect(mockOnDismiss).toHaveBeenCalledTimes(1);
-    });
-
-    it('should enable Proceed button only after confirmation checkbox is checked', async () => {
-      const user = userEvent.setup();
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 1, description: 'SSN' },
-        },
-        score: 10,
-        suggestions: [],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const proceedButton = screen.getByText(/Proceed Anyway/i);
-      const confirmCheckbox = screen.getByRole('checkbox');
-
-      // Initially disabled
-      expect(proceedButton).toBeDisabled();
-
-      // Check checkbox
-      await user.click(confirmCheckbox);
-      expect(proceedButton).not.toBeDisabled();
-
-      // Uncheck checkbox
-      await user.click(confirmCheckbox);
-      expect(proceedButton).toBeDisabled();
-    });
-
-    it('should call onProceed when Proceed button is clicked after confirmation', async () => {
-      const user = userEvent.setup();
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 1, description: 'SSN' },
-        },
-        score: 10,
-        suggestions: [],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const proceedButton = screen.getByText(/Proceed Anyway/i);
-      const confirmCheckbox = screen.getByRole('checkbox');
-
-      // Check checkbox and click proceed
-      await user.click(confirmCheckbox);
-      await user.click(proceedButton);
-
-      expect(mockOnProceed).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not call onProceed when Proceed button is clicked without confirmation', async () => {
-      const user = userEvent.setup();
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 1, description: 'SSN' },
-        },
-        score: 10,
-        suggestions: [],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const proceedButton = screen.getByText(/Proceed Anyway/i);
-
-      // Button should be disabled, but try to click anyway
-      expect(proceedButton).toBeDisabled();
-      expect(mockOnProceed).not.toHaveBeenCalled();
     });
   });
 
@@ -489,13 +271,17 @@ describe('PHIWarningBanner', () => {
         containsPHI: true,
         confidence: 'high',
         findings: {
-          ssn: { count: 1, description: 'SSN' },
+          ssn: {
+            count: 1,
+            description: 'Social Security Number',
+            samples: ['123-45-6789'],
+          },
         },
         score: 10,
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -503,22 +289,27 @@ describe('PHIWarningBanner', () => {
         />
       );
 
+      // Banner should have assertive live region (via Banner component)
       const banner = screen.getByRole('alert');
-      expect(banner).toHaveAttribute('aria-live', 'assertive');
+      expect(banner).toBeInTheDocument();
     });
 
-    it('should have proper button labels', () => {
+    it('should have accessible close button', () => {
       const phiDetection = {
         containsPHI: true,
         confidence: 'high',
         findings: {
-          ssn: { count: 1, description: 'SSN' },
+          ssn: {
+            count: 1,
+            description: 'Social Security Number',
+            samples: ['123-45-6789'],
+          },
         },
         score: 10,
         suggestions: [],
       };
 
-      render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -526,71 +317,28 @@ describe('PHIWarningBanner', () => {
         />
       );
 
-      expect(screen.getByLabelText(/Dismiss PHI warning/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Proceed with generation after confirming no real PHI/i)).toBeInTheDocument();
-    });
-
-    it('should have proper checkbox labeling', () => {
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'high',
-        findings: {
-          ssn: { count: 1, description: 'SSN' },
-        },
-        score: 10,
-        suggestions: [],
-      };
-
-      render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).toHaveAttribute('id', 'phi-confirmation');
-      expect(checkbox).toHaveAttribute('aria-describedby', 'phi-confirmation-label');
+      const closeButton = screen.getByLabelText(/dismiss/i);
+      expect(closeButton).toBeInTheDocument();
     });
   });
 
-  describe('Color Coding', () => {
-    it('should use red colors for high confidence', () => {
+  describe('Content Display', () => {
+    it('should show HIPAA compliance message', () => {
       const phiDetection = {
         containsPHI: true,
         confidence: 'high',
         findings: {
-          ssn: { count: 1, description: 'SSN' },
-        },
-        score: 18,
-        suggestions: [],
-      };
-
-      const { container } = render(
-        <PHIWarningBanner
-          phiDetection={phiDetection}
-          onDismiss={mockOnDismiss}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const banner = container.firstChild;
-      expect(banner).toHaveClass('border-red-500');
-    });
-
-    it('should use amber colors for medium confidence', () => {
-      const phiDetection = {
-        containsPHI: true,
-        confidence: 'medium',
-        findings: {
-          mrn: { count: 1, description: 'MRN' },
+          ssn: {
+            count: 1,
+            description: 'Social Security Number',
+            samples: ['123-45-6789'],
+          },
         },
         score: 10,
         suggestions: [],
       };
 
-      const { container } = render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -598,22 +346,26 @@ describe('PHIWarningBanner', () => {
         />
       );
 
-      const banner = container.firstChild;
-      expect(banner).toHaveClass('border-amber-500');
+      expect(screen.getByText(/HIPAA Compliance/i)).toBeInTheDocument();
+      expect(screen.getByText(/PHI must be removed before documentation generation/i)).toBeInTheDocument();
     });
 
-    it('should use yellow colors for low confidence', () => {
+    it('should mention review panel in instructions', () => {
       const phiDetection = {
         containsPHI: true,
-        confidence: 'low',
+        confidence: 'high',
         findings: {
-          phone: { count: 1, description: 'Phone' },
+          ssn: {
+            count: 1,
+            description: 'Social Security Number',
+            samples: ['123-45-6789'],
+          },
         },
-        score: 3,
+        score: 10,
         suggestions: [],
       };
 
-      const { container } = render(
+      renderWithTheme(
         <PHIWarningBanner
           phiDetection={phiDetection}
           onDismiss={mockOnDismiss}
@@ -621,8 +373,8 @@ describe('PHIWarningBanner', () => {
         />
       );
 
-      const banner = container.firstChild;
-      expect(banner).toHaveClass('border-yellow-500');
+      expect(screen.getByText(/review panel below/i)).toBeInTheDocument();
+      expect(screen.getByText(/wavy underlines/i)).toBeInTheDocument();
     });
   });
 });

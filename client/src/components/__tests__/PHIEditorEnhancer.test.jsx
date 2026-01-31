@@ -3,10 +3,15 @@
  * Monaco integration for PHI detection and sanitization
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { PHIEditorEnhancer } from '../PHIEditorEnhancer';
 import { ThemeProvider } from '../../contexts/ThemeContext';
+
+// Mock scrollTo (not available in jsdom)
+beforeAll(() => {
+  Element.prototype.scrollTo = vi.fn();
+});
 
 // Mock Monaco editor
 const mockEditor = {
@@ -97,8 +102,8 @@ describe('PHIEditorEnhancer', () => {
       />
     );
 
-    expect(screen.getByText(/Protected Health Information Detected/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 items/i)).toBeInTheDocument();
+    expect(screen.getByText(/PHI Detected/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 unique, 2 total/i)).toBeInTheDocument();
   });
 
   it('displays PHI items in table', () => {
@@ -157,9 +162,10 @@ describe('PHIEditorEnhancer', () => {
       />
     );
 
-    expect(screen.getByText(/0 Accepted/i)).toBeInTheDocument();
-    expect(screen.getByText(/0 Skipped/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 Pending/i)).toBeInTheDocument();
+    // Stats without icons
+    expect(screen.getByText('0 Accepted')).toBeInTheDocument();
+    expect(screen.getByText('0 Skipped')).toBeInTheDocument();
+    expect(screen.getByText('2 Pending')).toBeInTheDocument();
   });
 
   it('collapses and expands panel', async () => {
@@ -178,21 +184,21 @@ describe('PHIEditorEnhancer', () => {
       />
     );
 
-    const toggleButton = screen.getByLabelText(/Collapse panel/i);
+    const toggleButton = screen.getByLabelText(/Collapse PHI review panel/i);
     fireEvent.click(toggleButton);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/Expand panel/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Expand PHI review panel/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByLabelText(/Expand panel/i));
+    fireEvent.click(screen.getByLabelText(/Expand PHI review panel/i));
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/Collapse panel/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Collapse PHI review panel/i)).toBeInTheDocument();
     });
   });
 
-  it('calls onPhiResolved when Apply All Changes clicked', async () => {
+  it('calls onPhiResolved when Apply button clicked', async () => {
     const onCodeChange = vi.fn();
     const onPhiResolved = vi.fn();
 
@@ -213,11 +219,11 @@ describe('PHIEditorEnhancer', () => {
     fireEvent.click(acceptButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/1 Accepted/i)).toBeInTheDocument();
+      expect(screen.getByText('1 Accepted')).toBeInTheDocument();
     });
 
-    // Click Apply All Changes
-    const applyButton = screen.getByText(/Apply All Changes/i);
+    // Click Apply button (pendingCount = 1 since we accepted one of two items)
+    const applyButton = screen.getByText(/Apply \(1\)/i);
     fireEvent.click(applyButton);
 
     await waitFor(() => {

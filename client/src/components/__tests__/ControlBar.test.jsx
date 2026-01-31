@@ -314,7 +314,9 @@ describe('ControlBar Component', () => {
       const { container } = render(<ControlBar {...defaultProps} />);
 
       const controlBar = container.firstChild;
-      expect(controlBar).toHaveClass('bg-white', 'border-b', 'border-slate-200', 'p-4');
+      // Check for base classes and dark mode support
+      expect(controlBar).toHaveClass('bg-white', 'p-4');
+      expect(controlBar.className).toContain('dark:bg-slate-900');
     });
 
     it('should have responsive flex layout', () => {
