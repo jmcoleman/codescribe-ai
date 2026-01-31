@@ -65,6 +65,7 @@ export function CodePanel({
   const mobileMenuRef = useRef(null);
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
+  const clearButtonRef = useRef(null);
 
   // Persist viewMode to localStorage
   useEffect(() => {
@@ -90,18 +91,17 @@ export function CodePanel({
     editorRef.current = editor;
     monacoRef.current = monaco;
 
-    // Start with Tab Focus Mode enabled (Tab moves focus, not inserts tabs)
+    // Enable Tab Focus Mode so Tab moves focus instead of inserting tabs
     editor.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
 
-    // Listen for Shift+Tab to re-enable tabFocusMode before focus moves out
+    // Listen for Escape to exit editor and focus Clear button
     editor.onKeyDown((e) => {
-      // Shift+Tab while in editor → re-enable tabFocusMode so Tab moves focus
-      if (e.keyCode === 2 && e.shiftKey) { // KeyCode.Tab = 2
-        // Check if tabFocusMode is currently OFF (Tab inserts tabs)
-        // Toggle it ON so Shift+Tab can move focus out
-        const tabFocusMode = editor.getRawOptions().tabFocusMode;
-        if (!tabFocusMode) {
-          editor.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
+      if (e.keyCode === 9) { // KeyCode.Escape = 9
+        e.preventDefault();
+        e.stopPropagation();
+        // Move focus to Clear button
+        if (clearButtonRef.current) {
+          clearButtonRef.current.focus();
         }
       }
     });
@@ -235,6 +235,7 @@ export function CodePanel({
             {code && !readOnly && onClear && (
               <Tooltip content="Clear code">
                 <button
+                  ref={clearButtonRef}
                   type="button"
                   onClick={() => {
                     setIsClearing(true);
@@ -499,52 +500,8 @@ export function CodePanel({
             </div>
           </div>
         ) : (
-          /* Monaco Editor with focusable wrapper */
-          <div
-            className="absolute inset-0 monaco-editor-wrapper"
-            tabIndex={0}
-            role="region"
-            aria-label="Code editor - press Enter to edit, Escape to exit"
-            onKeyDown={(e) => {
-              // Enter activates the editor
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (editorRef.current) {
-                  // Disable tabFocusMode so Tab inserts tabs while editing
-                  const tabFocusMode = editorRef.current.getRawOptions().tabFocusMode;
-                  if (tabFocusMode) {
-                    editorRef.current.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
-                  }
-                  editorRef.current.focus();
-                }
-                return;
-              }
-
-              // Any typing key (letter, number, space) activates the editor
-              if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                if (editorRef.current) {
-                  // Disable tabFocusMode so Tab inserts tabs while editing
-                  const tabFocusMode = editorRef.current.getRawOptions().tabFocusMode;
-                  if (tabFocusMode) {
-                    editorRef.current.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
-                  }
-                  editorRef.current.focus();
-                  // Monaco will receive the keypress event
-                }
-              }
-            }}
-            onClick={() => {
-              // Click also activates editor
-              if (editorRef.current) {
-                // Disable tabFocusMode so Tab inserts tabs while editing
-                const tabFocusMode = editorRef.current.getRawOptions().tabFocusMode;
-                if (tabFocusMode) {
-                  editorRef.current.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
-                }
-                editorRef.current.focus();
-              }
-            }}
-          >
+          /* Monaco Editor - Press Escape to exit and focus Clear button */
+          <div className="absolute inset-0">
             <Suspense fallback={<EditorLoadingFallback />}>
               <LazyMonacoEditor
                 height="100%"
